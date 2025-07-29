@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import PlayerList from './components/PlayerList';
+import SimulationButton from './components/SimulationButton';
+import TransferList from './components/TransferList';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 
 function Home() {
@@ -52,11 +54,19 @@ function MyClubPage() {
 }
 
 function TransfersPage() {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleSimulationComplete = () => {
+    // Trigger refresh of transfer list
+    setRefreshKey(prev => prev + 1);
+  };
+
   return (
     <main className="app-main">
       <section id="transfers">
         <h2>Transfers</h2>
-        {/* Transfer logic/component komt hier */}
+        <SimulationButton onSimulationComplete={handleSimulationComplete} />
+        <TransferList key={refreshKey} />
       </section>
     </main>
   );

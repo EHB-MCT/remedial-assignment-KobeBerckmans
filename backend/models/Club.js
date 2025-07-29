@@ -11,12 +11,11 @@ const ClubSchema = new mongoose.Schema({
     required: true, 
     default: 100000000 
   },
-  players: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Player' 
+  playerIds: [{ 
+    type: String 
   }],
   transferHistory: [{
-    playerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Player' },
+    playerId: { type: String },
     type: { type: String, enum: ['IN', 'OUT'], required: true },
     amount: { type: Number, required: true },
     date: { type: Date, default: Date.now }

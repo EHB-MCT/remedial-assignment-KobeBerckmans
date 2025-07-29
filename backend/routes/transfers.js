@@ -7,7 +7,6 @@ const Club = require('../models/Club');
 router.get('/', async (req, res) => {
   try {
     const transfers = await Transfer.find()
-      .populate('player')
       .populate('fromClub')
       .populate('toClub');
     res.json(transfers);
@@ -20,7 +19,6 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const transfer = await Transfer.findById(req.params.id)
-      .populate('player')
       .populate('fromClub')
       .populate('toClub');
     if (!transfer) {
@@ -35,7 +33,8 @@ router.get('/:id', async (req, res) => {
 // POST new transfer
 router.post('/', async (req, res) => {
   const transfer = new Transfer({
-    player: req.body.player,
+    playerId: req.body.playerId,
+    playerName: req.body.playerName,
     fromClub: req.body.fromClub,
     toClub: req.body.toClub,
     amount: req.body.amount,
@@ -47,7 +46,6 @@ router.post('/', async (req, res) => {
   try {
     const newTransfer = await transfer.save();
     const populatedTransfer = await Transfer.findById(newTransfer._id)
-      .populate('player')
       .populate('fromClub')
       .populate('toClub');
     res.status(201).json(populatedTransfer);
@@ -70,7 +68,6 @@ router.put('/:id', async (req, res) => {
 
     const updatedTransfer = await transfer.save();
     const populatedTransfer = await Transfer.findById(updatedTransfer._id)
-      .populate('player')
       .populate('fromClub')
       .populate('toClub');
     res.json(populatedTransfer);
@@ -101,7 +98,6 @@ router.post('/:id/negotiate', async (req, res) => {
 
     const updatedTransfer = await transfer.save();
     const populatedTransfer = await Transfer.findById(updatedTransfer._id)
-      .populate('player')
       .populate('fromClub')
       .populate('toClub');
     res.json(populatedTransfer);
@@ -117,7 +113,7 @@ router.delete('/:id', async (req, res) => {
     if (!transfer) {
       return res.status(404).json({ message: 'Transfer not found' });
     }
-    await transfer.remove();
+    await Transfer.findByIdAndDelete(req.params.id);
     res.json({ message: 'Transfer deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
