@@ -1,0 +1,101 @@
+.player-list {}
+
+.player-list.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    justify-items: center;
+    margin-top: 1rem;
+}
+
+.player-list.compact {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    justify-items: center;
+    margin-top: 1rem;
+}
+
+.player-card {
+    background: linear-gradient(120deg, #3a7bd5 0%, #00d2ff 100%);
+    border-radius: 1.2rem;
+    box-shadow: 0 4px 16px rgba(30, 60, 114, 0.15);
+    padding: 1.5rem 1.2rem;
+    width: 260px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 3px solid #ffd700;
+}
+
+.player-card.compact {
+    width: 200px;
+    padding: 1rem 0.7rem;
+    flex-direction: column;
+    align-items: flex-start;
+    background: linear-gradient(120deg, #1e3c72 0%, #2a5298 100%);
+    border: 2px solid #fff;
+}
+
+.player-card.compact-short {
+    width: 160px;
+    padding: 0.7rem 0.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    background: linear-gradient(120deg, #1e3c72 0%, #2a5298 100%);
+    border: 2px solid #fff;
+    min-height: 120px;
+}
+
+.player-card:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 8px 24px rgba(30, 60, 114, 0.25);
+    border-color: #fff700;
+}
+
+.player-avatar {
+    font-size: 2.5rem;
+    margin-right: 1.2rem;
+    background: #fff;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(30, 60, 114, 0.10);
+}
+
+.player-card.compact .player-avatar,
+.player-card.compact-short .player-avatar {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+}
+
+.player-info h3 {
+    margin: 0 0 0.3rem 0;
+    font-size: 1.1rem;
+    color: #ffd700;
+}
+
+.player-info p {
+    margin: 0.1rem 0;
+    font-size: 0.95rem;
+}
+
+.player-stats {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 1.2rem;
+    font-size: 0.95rem;
+    color: #fff;
+    font-weight: 500;
+}
+
+.player-list-loading {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #ffd700;
+    margin-top: 2rem;
+}
