@@ -1,15 +1,26 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
-
+// MongoDB connection
 const mongoUri = process.env.MONGODB_URI;
+mongoose.connect(mongoUri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('Connected to MongoDB!'))
+.catch(err => console.error('MongoDB connection error:', err));
+
+// Routes
+const clubsRouter = require('./routes/clubs');
+app.use('/api/clubs', clubsRouter);
+
+const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
   res.send('TransferMarketSim backend running');
@@ -17,6 +28,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/players', async (req, res) => {
   try {
+    const { MongoClient, ServerApiVersion } = require('mongodb');
     const client = new MongoClient(mongoUri, {
       serverApi: {
         version: ServerApiVersion.v1,
