@@ -54,6 +54,7 @@ router.put('/:id', async (req, res) => {
     if (req.body.budget) club.budget = req.body.budget;
     if (req.body.league) club.league = req.body.league;
     if (req.body.country) club.country = req.body.country;
+    if (req.body.playerIds) club.playerIds = req.body.playerIds;
 
     const updatedClub = await club.save();
     res.json(updatedClub);

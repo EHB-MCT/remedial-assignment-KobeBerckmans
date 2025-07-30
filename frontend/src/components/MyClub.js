@@ -66,6 +66,8 @@ function MyClub() {
         description: `Player available for transfer from ${userClub.name}`
       };
 
+      console.log('Creating auction with data:', auctionData);
+
       const response = await axios.post('http://localhost:3000/api/auctions', auctionData);
       
       if (response.status === 201) {
@@ -73,14 +75,20 @@ function MyClub() {
         
         // Remove player from club
         const updatedPlayerIds = userClub.playerIds.filter(id => id !== playerId);
-        await axios.put(`http://localhost:3000/api/clubs/${userClub._id}`, {
+        console.log('Updating club with playerIds:', updatedPlayerIds);
+        
+        const updateResponse = await axios.put(`http://localhost:3000/api/clubs/${userClub._id}`, {
           playerIds: updatedPlayerIds
         });
+
+        console.log('Club update response:', updateResponse.data);
 
         // Refresh club data
         fetchUserClub();
       }
     } catch (error) {
+      console.error('Error selling player:', error);
+      console.error('Error response:', error.response?.data);
       setMessage(`❌ ${error.response?.data?.message || 'Failed to sell player'}`);
     }
   };
