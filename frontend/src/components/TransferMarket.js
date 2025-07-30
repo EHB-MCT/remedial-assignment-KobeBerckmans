@@ -66,14 +66,12 @@ function TransferMarket({ user, club, onClubUpdate }) {
             console.log('Auction processed:', processResponse.data);
             
             // Refresh user club data after processing
-            if (userClub) {
+            if (userClub && onClubUpdate) {
               try {
+                console.log('Refreshing club data after auction processing...');
                 const clubResponse = await axios.get(`http://localhost:3000/api/clubs/${userClub._id}`);
                 console.log('Updated club data:', clubResponse.data);
-                // Update the club data in the parent component
-                if (typeof onClubUpdate === 'function') {
-                  onClubUpdate(clubResponse.data);
-                }
+                onClubUpdate(clubResponse.data);
               } catch (clubError) {
                 console.error('Failed to refresh club data:', clubError);
               }
@@ -152,6 +150,31 @@ function TransferMarket({ user, club, onClubUpdate }) {
       console.error('Buy now error:', error);
       console.error('Error response:', error.response?.data);
       setMessage(`❌ ${error.response?.data?.message || 'Failed to purchase player'}`);
+    }
+  };
+
+  const manuallyProcessAuction = async (auctionId) => {
+    try {
+      console.log('Manually processing auction:', auctionId);
+      const response = await axios.post(`http://localhost:3000/api/auctions/${auctionId}/process`);
+      console.log('Manual process response:', response.data);
+      
+      // Refresh auctions and club data
+      fetchAuctions();
+      
+      if (onClubUpdate && userClub) {
+        try {
+          const clubResponse = await axios.get(`http://localhost:3000/api/clubs/${userClub._id}`);
+          onClubUpdate(clubResponse.data);
+        } catch (clubError) {
+          console.error('Failed to refresh club data:', clubError);
+        }
+      }
+      
+      setMessage('✅ Auction manually processed!');
+    } catch (error) {
+      console.error('Manual process error:', error);
+      setMessage(`❌ ${error.response?.data?.message || 'Failed to process auction'}`);
     }
   };
 
@@ -280,6 +303,23 @@ function TransferMarket({ user, club, onClubUpdate }) {
                     title={`Your budget: ${formatAmount(userClub.budget)} | Buy now price: ${formatAmount(auction.buyNowPrice)}`}
                   >
                     Buy Now
+                  </button>
+                  
+                  {/* Test button for manual processing */}
+                  <button 
+                    onClick={() => manuallyProcessAuction(auction._id)}
+                    className="process-btn"
+                    style={{ 
+                      background: '#6c757d', 
+                      color: 'white', 
+                      border: 'none', 
+                      padding: '5px 10px', 
+                      borderRadius: '4px',
+                      fontSize: '0.8rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Test Process
                   </button>
                 </div>
               )}
