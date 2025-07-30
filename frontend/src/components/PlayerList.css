@@ -1,5 +1,3 @@
-.player-list {}
-
 .player-list.grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -82,15 +80,37 @@
 .player-info p {
     margin: 0.1rem 0;
     font-size: 0.95rem;
+    color: #fff;
 }
 
 .player-stats {
     margin-top: 0.5rem;
     display: flex;
-    gap: 1.2rem;
-    font-size: 0.95rem;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.8rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-label {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.stat-value {
     color: #fff;
-    font-weight: 500;
+    font-weight: bold;
+    font-size: 0.9rem;
 }
 
 .player-list-loading {

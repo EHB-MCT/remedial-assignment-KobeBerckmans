@@ -3,6 +3,9 @@ import './App.css';
 import PlayerList from './components/PlayerList';
 import SimulationButton from './components/SimulationButton';
 import TransferList from './components/TransferList';
+import TransferMarket from './components/TransferMarket';
+import DailySimulation from './components/DailySimulation';
+import MyClub from './components/MyClub';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 
 function Home() {
@@ -46,27 +49,19 @@ function MyClubPage() {
     <main className="app-main">
       <section id="myclub">
         <h2>My Club</h2>
-        <p>Here are the players currently in your club.</p>
-        {/* My club logic/component komt hier */}
+        <MyClub />
       </section>
     </main>
   );
 }
 
 function TransfersPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const handleSimulationComplete = () => {
-    // Trigger refresh of transfer list
-    setRefreshKey(prev => prev + 1);
-  };
-
   return (
     <main className="app-main">
       <section id="transfers">
-        <h2>Transfers</h2>
-        <SimulationButton onSimulationComplete={handleSimulationComplete} />
-        <TransferList key={refreshKey} />
+        <h2>Transfer Market</h2>
+        <DailySimulation />
+        <TransferMarket />
       </section>
     </main>
   );

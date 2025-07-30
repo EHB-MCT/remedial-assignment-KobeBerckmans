@@ -35,9 +35,20 @@ function PlayerList({ limit, grid, compact }) {
             {!compact && grid && <p><b>Nationality:</b> {player.nationality}</p>}
             {!compact && (
               <div className="player-stats">
-                <span>Goals: {player.goals}</span>
-                <span>Assists: {player.assists}</span>
-                {grid && <span>Apps: {player.appearances}</span>}
+                <div className="stat-item">
+                  <span className="stat-label">Goals:</span>
+                  <span className="stat-value">{player.goals}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Assists:</span>
+                  <span className="stat-value">{player.assists}</span>
+                </div>
+                {grid && (
+                  <div className="stat-item">
+                    <span className="stat-label">Apps:</span>
+                    <span className="stat-value">{player.appearances}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
