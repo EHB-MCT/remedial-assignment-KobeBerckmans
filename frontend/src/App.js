@@ -14,24 +14,55 @@ import axios from 'axios';
 function Home({ user, club }) {
   return (
     <main className="app-main">
-      <section id="myclub">
-        <h2>My Club</h2>
-        <p>Here are the players currently in your club.</p>
-        {/* My club logic/component komt hier */}
-      </section>
-      <section id="players">
-        <h2>Players</h2>
-        <p>Featured players from the database.</p>
-        <PlayerList limit={4} compact={true} />
-      </section>
-      <section id="transfers">
-        <h2>Transfers</h2>
-        {/* Transfer logic/component komt hier */}
-      </section>
-      <section id="history">
-        <h2>Transfer History</h2>
-        {/* Transfer history/component komt hier */}
-      </section>
+      <div className="welcome-banner">
+        <h1>Welcome to TransferMarketSim</h1>
+        <p>Manage your club, scout players, and dominate the transfer market!</p>
+        {club && (
+          <div className="stats-grid">
+            <div className="stat-card">
+              <span className="stat-number">{club.budget ? new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }).format(club.budget) : '€0'}</span>
+              <span className="stat-label">Club Budget</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-number">{club.playerIds ? club.playerIds.length : 0}</span>
+              <span className="stat-label">Players</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-number">24/7</span>
+              <span className="stat-label">Market Open</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="homepage-container">
+        <section className="homepage-section myclub-section">
+          <h2>🏆 My Club</h2>
+          <p>View your current squad, manage your players, and track your club's performance. Build your dream team and compete in the transfer market.</p>
+          <p>Your club: <strong>{club?.name || 'Loading...'}</strong></p>
+        </section>
+
+        <section className="homepage-section players-section">
+          <h2>👥 Players</h2>
+          <p>Browse through the complete database of available players. Scout talent, analyze statistics, and find the perfect additions to your squad.</p>
+          <PlayerList limit={4} compact={true} />
+        </section>
+
+        <section className="homepage-section transfers-section">
+          <h2>💰 Transfer Market</h2>
+          <p>Participate in live auctions, place bids on players, and negotiate transfers. The market is dynamic with real-time updates and competitive bidding.</p>
+        </section>
+
+        <section className="homepage-section history-section">
+          <h2>📊 Transfer History</h2>
+          <p>Track all your completed transfers, view transaction history, and analyze your club's transfer strategy over time.</p>
+        </section>
+      </div>
     </main>
   );
 }
