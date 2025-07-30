@@ -5,58 +5,72 @@
 }
 
 .club-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    padding: 20px;
     background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    border-radius: 10px;
     color: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .club-header h2 {
-    margin: 0;
+    margin: 0 0 15px 0;
     font-size: 2rem;
     font-weight: bold;
 }
 
-.club-info {
+.club-stats {
     display: flex;
     gap: 30px;
-    text-align: right;
 }
 
-.club-budget,
-.club-players-count {
+.stat {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    align-items: center;
 }
 
-.club-budget span,
-.club-players-count span {
+.stat span {
     font-size: 0.9rem;
     opacity: 0.9;
+    margin-bottom: 5px;
 }
 
-.club-budget strong,
-.club-players-count strong {
+.stat strong {
     font-size: 1.2rem;
-    color: #ffd700;
+    font-weight: bold;
+}
+
+.message {
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
 }
 
 .no-players {
     text-align: center;
     padding: 40px;
     background: #f8f9fa;
-    border-radius: 10px;
+    border-radius: 12px;
     color: #6c757d;
 }
 
 .players-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
 }
@@ -64,110 +78,127 @@
 .my-club-player-card {
     background: white;
     border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: 2px solid #e9ecef;
 }
 
 .my-club-player-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .player-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f8f9fa;
 }
 
 .player-header h3 {
     margin: 0;
-    font-size: 1.2rem;
+    color: #2c3e50;
+    font-size: 1.3rem;
     font-weight: bold;
 }
 
-.player-position {
-    padding: 4px 8px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
+.position {
+    background: #3498db;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
     font-size: 0.8rem;
     font-weight: bold;
+    text-transform: uppercase;
 }
 
-.player-details {
-    padding: 15px 20px;
+.player-info {
+    margin-bottom: 15px;
+}
+
+.player-info p {
+    margin: 5px 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.player-info strong {
+    color: #2c3e50;
+}
+
+.player-stats {
     background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
 }
 
-.player-stat {
+.stat-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
 }
 
-.player-stat:last-child {
+.stat-item:last-child {
     margin-bottom: 0;
 }
 
-.player-stat span {
+.stat-label {
     color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.stat-value {
+    color: #2c3e50;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.player-actions {
+    display: flex;
+    justify-content: center;
+}
+
+.sell-btn {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
     font-size: 0.9rem;
 }
 
-.player-stat strong {
-    color: #2c3e50;
-    font-weight: bold;
+.sell-btn:hover {
+    background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
 }
 
-.player-stats {
-    padding: 15px 20px;
-    background: white;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-}
-
-.stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 6px;
-}
-
-.stat-item span {
-    font-size: 0.8rem;
-    color: #6c757d;
-    margin-bottom: 5px;
-}
-
-.stat-item strong {
-    font-size: 1.1rem;
-    color: #2c3e50;
-    font-weight: bold;
+.sell-btn:active {
+    transform: translateY(0);
 }
 
 .transfer-history {
-    margin-top: 30px;
-    padding: 20px;
     background: white;
     border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
 }
 
 .transfer-history h3 {
-    margin: 0 0 20px 0;
+    margin: 0 0 15px 0;
     color: #2c3e50;
-    font-size: 1.3rem;
-    border-bottom: 2px solid #667eea;
-    padding-bottom: 10px;
+    font-size: 1.5rem;
+    font-weight: bold;
 }
 
 .history-list {
@@ -182,35 +213,23 @@
     align-items: center;
     padding: 12px 15px;
     border-radius: 8px;
-    border: 1px solid #dee2e6;
-    transition: transform 0.2s ease;
-}
-
-.history-item:hover {
-    transform: translateX(5px);
+    background: #f8f9fa;
+    border-left: 4px solid #6c757d;
 }
 
 .history-item.in {
+    border-left-color: #28a745;
     background: #d4edda;
-    border-color: #c3e6cb;
 }
 
 .history-item.out {
+    border-left-color: #dc3545;
     background: #f8d7da;
-    border-color: #f5c6cb;
 }
 
 .history-type {
     font-weight: bold;
     font-size: 0.9rem;
-}
-
-.history-item.in .history-type {
-    color: #155724;
-}
-
-.history-item.out .history-type {
-    color: #721c24;
 }
 
 .history-amount {
@@ -219,32 +238,12 @@
 }
 
 .history-date {
+    color: #6c757d;
     font-size: 0.8rem;
-    color: #6c757d;
-}
-
-.my-club-loading {
-    text-align: center;
-    padding: 40px;
-    font-size: 1.2rem;
-    color: #6c757d;
-}
-
-.my-club-error {
-    text-align: center;
-    padding: 40px;
-    color: #dc3545;
-    font-size: 1.1rem;
 }
 
 @media (max-width: 768px) {
-    .club-header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
-
-    .club-info {
+    .club-stats {
         flex-direction: column;
         gap: 15px;
     }
@@ -253,13 +252,9 @@
         grid-template-columns: 1fr;
     }
 
-    .player-stats {
-        grid-template-columns: 1fr;
-    }
-
     .history-item {
         flex-direction: column;
-        gap: 8px;
+        gap: 5px;
         text-align: center;
     }
 }

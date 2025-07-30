@@ -6,6 +6,7 @@ function MyClub() {
   const [userClub, setUserClub] = useState(null);
   const [clubPlayers, setClubPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     fetchUserClub();
@@ -13,20 +14,15 @@ function MyClub() {
 
   const fetchUserClub = async () => {
     try {
-      // Get the first club as user's club
       const clubsResponse = await axios.get('http://localhost:3000/api/clubs');
       if (clubsResponse.data.length > 0) {
         const club = clubsResponse.data[0];
         setUserClub(club);
-        
-        // Fetch players for this club
         if (club.playerIds && club.playerIds.length > 0) {
           const playersResponse = await axios.get('http://localhost:3000/api/players');
           const allPlayers = playersResponse.data;
           const clubPlayerIds = club.playerIds.map(id => id.toString());
-          const players = allPlayers.filter(player => 
-            clubPlayerIds.includes(player._id.toString())
-          );
+          const players = allPlayers.filter(player => clubPlayerIds.includes(player._id.toString()));
           setClubPlayers(players);
         }
       }
@@ -34,6 +30,58 @@ function MyClub() {
     } catch (error) {
       console.error('Failed to fetch user club:', error);
       setLoading(false);
+    }
+  };
+
+  const sellPlayer = async (playerId, playerName) => {
+    if (!userClub) {
+      setMessage('❌ No club found');
+      return;
+    }
+
+    try {
+      // Calculate sell price based on player stats
+      const player = clubPlayers.find(p => p._id.toString() === playerId);
+      if (!player) {
+        setMessage('❌ Player not found');
+        return;
+      }
+
+      // Calculate price based on goals, assists, and appearances
+      const basePrice = 5000000; // 5M base
+      const goalsValue = player.goals * 200000; // 200k per goal
+      const assistsValue = player.assists * 150000; // 150k per assist
+      const appearancesValue = player.appearances * 50000; // 50k per appearance
+      const sellPrice = basePrice + goalsValue + assistsValue + appearancesValue;
+
+      // Create auction for the player
+      const auctionData = {
+        playerId: playerId,
+        playerName: playerName,
+        currentClub: userClub._id,
+        startingPrice: Math.floor(sellPrice * 0.8), // 80% of calculated value
+        currentPrice: Math.floor(sellPrice * 0.8),
+        buyNowPrice: sellPrice,
+        endTime: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+        description: `Player available for transfer from ${userClub.name}`
+      };
+
+      const response = await axios.post('http://localhost:3000/api/auctions', auctionData);
+      
+      if (response.status === 201) {
+        setMessage(`✅ ${playerName} listed for sale! Starting price: €${Math.floor(sellPrice * 0.8).toLocaleString()}`);
+        
+        // Remove player from club
+        const updatedPlayerIds = userClub.playerIds.filter(id => id !== playerId);
+        await axios.put(`http://localhost:3000/api/clubs/${userClub._id}`, {
+          playerIds: updatedPlayerIds
+        });
+
+        // Refresh club data
+        fetchUserClub();
+      }
+    } catch (error) {
+      setMessage(`❌ ${error.response?.data?.message || 'Failed to sell player'}`);
     }
   };
 
@@ -58,21 +106,27 @@ function MyClub() {
     <div className="my-club">
       <div className="club-header">
         <h2>{userClub.name}</h2>
-        <div className="club-info">
-          <div className="club-budget">
+        <div className="club-stats">
+          <div className="stat">
             <span>Budget:</span>
             <strong>{formatAmount(userClub.budget)}</strong>
           </div>
-          <div className="club-players-count">
+          <div className="stat">
             <span>Players:</span>
             <strong>{clubPlayers.length}</strong>
           </div>
         </div>
       </div>
 
+      {message && (
+        <div className={`message ${message.includes('✅') ? 'success' : 'error'}`}>
+          {message}
+        </div>
+      )}
+
       {clubPlayers.length === 0 ? (
         <div className="no-players">
-          <p>Your club has no players yet. Participate in the transfer market to sign players!</p>
+          <p>No players in your club yet. Buy some players from the transfer market!</p>
         </div>
       ) : (
         <div className="players-grid">
@@ -80,37 +134,37 @@ function MyClub() {
             <div key={player._id} className="my-club-player-card">
               <div className="player-header">
                 <h3>{player.name}</h3>
-                <span className="player-position">{player.position}</span>
+                <span className="position">{player.position}</span>
               </div>
               
-              <div className="player-details">
-                <div className="player-stat">
-                  <span>Age:</span>
-                  <strong>{player.age}</strong>
-                </div>
-                <div className="player-stat">
-                  <span>Nationality:</span>
-                  <strong>{player.nationality}</strong>
-                </div>
-                <div className="player-stat">
-                  <span>Market Value:</span>
-                  <strong>{formatAmount(player.marketValue)}</strong>
-                </div>
+              <div className="player-info">
+                <p><strong>Age:</strong> {player.age}</p>
+                <p><strong>Nationality:</strong> {player.nationality}</p>
+                <p><strong>Club:</strong> {player.club}</p>
               </div>
-              
+
               <div className="player-stats">
                 <div className="stat-item">
-                  <span>Goals:</span>
-                  <strong>{player.goals}</strong>
+                  <span className="stat-label">Goals:</span>
+                  <span className="stat-value">{player.goals}</span>
                 </div>
                 <div className="stat-item">
-                  <span>Assists:</span>
-                  <strong>{player.assists}</strong>
+                  <span className="stat-label">Assists:</span>
+                  <span className="stat-value">{player.assists}</span>
                 </div>
                 <div className="stat-item">
-                  <span>Appearances:</span>
-                  <strong>{player.appearances}</strong>
+                  <span className="stat-label">Apps:</span>
+                  <span className="stat-value">{player.appearances}</span>
                 </div>
+              </div>
+
+              <div className="player-actions">
+                <button 
+                  onClick={() => sellPlayer(player._id.toString(), player.name)}
+                  className="sell-btn"
+                >
+                  🏷️ Sell Player
+                </button>
               </div>
             </div>
           ))}
@@ -123,15 +177,9 @@ function MyClub() {
           <div className="history-list">
             {userClub.transferHistory.slice(-5).reverse().map((transfer, index) => (
               <div key={index} className={`history-item ${transfer.type.toLowerCase()}`}>
-                <div className="history-type">
-                  {transfer.type === 'IN' ? '🟢 Signed' : '🔴 Sold'}
-                </div>
-                <div className="history-amount">
-                  {formatAmount(transfer.amount)}
-                </div>
-                <div className="history-date">
-                  {new Date(transfer.date).toLocaleDateString()}
-                </div>
+                <div className="history-type">{transfer.type === 'IN' ? '🟢 Signed' : '🔴 Sold'}</div>
+                <div className="history-amount">{formatAmount(transfer.amount)}</div>
+                <div className="history-date">{new Date(transfer.date).toLocaleDateString()}</div>
               </div>
             ))}
           </div>
