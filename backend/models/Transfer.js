@@ -1,9 +1,12 @@
 const mongoose = require('mongoose');
 
 const TransferSchema = new mongoose.Schema({
-  player: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Player',
+  playerId: {
+    type: String,
+    required: true
+  },
+  playerName: {
+    type: String,
     required: true
   },
   fromClub: {

@@ -44,7 +44,8 @@ const simulateTransfer = async (req, res) => {
 
     // Create transfer
     const transfer = new Transfer({
-      player: randomPlayer._id,
+      playerId: randomPlayer._id.toString(),
+      playerName: randomPlayer.name,
       fromClub: fromClub._id,
       toClub: toClub._id,
       amount: transferAmount,
@@ -63,7 +64,6 @@ const simulateTransfer = async (req, res) => {
 
     const savedTransfer = await transfer.save();
     const populatedTransfer = await Transfer.findById(savedTransfer._id)
-      .populate('player')
       .populate('fromClub')
       .populate('toClub');
 
@@ -114,7 +114,8 @@ const simulateTransferWindow = async (req, res) => {
 
       if (toClub.budget >= transferAmount) {
         const transfer = new Transfer({
-          player: randomPlayer._id,
+          playerId: randomPlayer._id.toString(),
+          playerName: randomPlayer.name,
           fromClub: fromClub._id,
           toClub: toClub._id,
           amount: transferAmount,

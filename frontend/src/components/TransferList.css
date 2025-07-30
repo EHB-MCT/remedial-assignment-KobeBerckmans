@@ -1,0 +1,134 @@
+.transfer-list {
+    margin-top: 2rem;
+}
+
+.transfer-list h3 {
+    color: #ffd700;
+    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+}
+
+.transfer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.transfer-card {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.transfer-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.transfer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.transfer-status {
+    padding: 0.3rem 0.8rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+}
+
+.transfer-amount {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ffd700;
+}
+
+.transfer-player {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.transfer-clubs {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.club {
+    flex: 1;
+    text-align: center;
+}
+
+.club span {
+    display: block;
+    font-size: 0.8rem;
+    color: #bdc3c7;
+    margin-bottom: 0.2rem;
+}
+
+.club strong {
+    color: #fff;
+    font-size: 1rem;
+}
+
+.transfer-arrow {
+    font-size: 1.5rem;
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.transfer-notes {
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    font-style: italic;
+    color: #bdc3c7;
+}
+
+.transfer-date {
+    text-align: right;
+    font-size: 0.8rem;
+    color: #95a5a6;
+}
+
+.transfer-list-loading {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #ffd700;
+    margin-top: 2rem;
+}
+
+.no-transfers {
+    text-align: center;
+    padding: 3rem;
+    color: #bdc3c7;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .transfer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .transfer-clubs {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .transfer-arrow {
+        transform: rotate(90deg);
+    }
+}
