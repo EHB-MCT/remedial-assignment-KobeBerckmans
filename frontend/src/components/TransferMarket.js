@@ -10,6 +10,7 @@ function TransferMarket() {
   const [userClub, setUserClub] = useState(null);
   const [message, setMessage] = useState('');
   const [refreshInterval, setRefreshInterval] = useState(null);
+  const [timerInterval, setTimerInterval] = useState(null);
 
   useEffect(() => {
     fetchAuctions();
@@ -19,22 +20,44 @@ function TransferMarket() {
     const interval = setInterval(fetchAuctions, 5000);
     setRefreshInterval(interval);
 
+    // Set up live countdown timer every second
+    const timer = setInterval(() => {
+      setAuctions(prevAuctions => 
+        prevAuctions.map(auction => ({
+          ...auction,
+          timeLeft: calculateTimeLeft(auction.endTime)
+        }))
+      );
+    }, 1000);
+    setTimerInterval(timer);
+
     return () => {
       if (interval) clearInterval(interval);
+      if (timer) clearInterval(timer);
     };
   }, []);
+
+  const calculateTimeLeft = (endTime) => {
+    const now = new Date();
+    const end = new Date(endTime);
+    const timeLeft = end - now;
+    return Math.max(0, timeLeft);
+  };
 
   const fetchAuctions = async () => {
     try {
       const response = await axios.get('http://localhost:3000/api/auctions');
       const auctions = response.data;
       
+      // Add timeLeft to each auction
+      const auctionsWithTime = auctions.map(auction => ({
+        ...auction,
+        timeLeft: calculateTimeLeft(auction.endTime)
+      }));
+      
       // Process any ended auctions
-      for (const auction of auctions) {
-        const now = new Date();
-        const endTime = new Date(auction.endTime);
-        
-        if (auction.status === 'active' && now > endTime) {
+      for (const auction of auctionsWithTime) {
+        if (auction.status === 'active' && auction.timeLeft <= 0) {
           try {
             await axios.post(`http://localhost:3000/api/auctions/${auction._id}/process`);
             console.log(`Processed ended auction for ${auction.playerName}`);
@@ -46,7 +69,12 @@ function TransferMarket() {
       
       // Fetch updated auctions
       const updatedResponse = await axios.get('http://localhost:3000/api/auctions');
-      setAuctions(updatedResponse.data);
+      const updatedAuctions = updatedResponse.data.map(auction => ({
+        ...auction,
+        timeLeft: calculateTimeLeft(auction.endTime)
+      }));
+      
+      setAuctions(updatedAuctions);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch auctions:', error);
@@ -105,18 +133,14 @@ function TransferMarket() {
     }
   };
 
-  const formatTimeLeft = (endTime) => {
-    const now = new Date();
-    const end = new Date(endTime);
-    const timeLeft = end - now;
-
+  const formatTimeLeft = (timeLeft) => {
     if (timeLeft <= 0) return 'Ended';
 
     const minutes = Math.floor(timeLeft / (1000 * 60));
     const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
     if (minutes > 0) {
-      return `${minutes}m ${seconds}s`;
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     } else {
       return `${seconds}s`;
     }
@@ -131,11 +155,7 @@ function TransferMarket() {
     }).format(amount);
   };
 
-  const getTimeLeftColor = (endTime) => {
-    const now = new Date();
-    const end = new Date(endTime);
-    const timeLeft = end - now;
-    
+  const getTimeLeftColor = (timeLeft) => {
     if (timeLeft <= 0) return 'ended';
     if (timeLeft <= 60000) return 'urgent'; // Less than 1 minute
     if (timeLeft <= 300000) return 'warning'; // Less than 5 minutes
@@ -198,8 +218,8 @@ function TransferMarket() {
 
                 <div className="time-left">
                   <span>Time Left:</span>
-                  <strong className={`time-${getTimeLeftColor(auction.endTime)}`}>
-                    {formatTimeLeft(auction.endTime)}
+                  <strong className={`time-${getTimeLeftColor(auction.timeLeft)}`}>
+                    {formatTimeLeft(auction.timeLeft)}
                   </strong>
                 </div>
 
