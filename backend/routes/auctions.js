@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Auction = require('../models/Auction');
 const Club = require('../models/Club');
+const axios = require('axios'); // Added axios for auto-bid
 
 // GET all active auctions
 router.get('/', async (req, res) => {
@@ -212,6 +213,73 @@ router.post('/:id/buy-now', async (req, res) => {
   } catch (err) {
     console.error('Buy now error:', err);
     res.status(400).json({ message: err.message });
+  }
+});
+
+// POST automatic bidding for other clubs
+router.post('/:id/auto-bid', async (req, res) => {
+  try {
+    const auction = await Auction.findById(req.params.id);
+    
+    if (!auction) {
+      return res.status(404).json({ message: 'Auction not found' });
+    }
+
+    if (auction.status !== 'active') {
+      return res.status(400).json({ message: 'Auction is not active' });
+    }
+
+    // Get all clubs except the selling club
+    const allClubs = await Club.find({ _id: { $ne: auction.currentClub } });
+    
+    if (allClubs.length === 0) {
+      return res.status(400).json({ message: 'No other clubs available for bidding' });
+    }
+
+    const bids = [];
+    
+    // Simulate bids from other clubs
+    for (const club of allClubs) {
+      // Skip if club has no budget
+      if (club.budget < auction.currentPrice + 1000000) continue;
+      
+      // Random chance to bid (30% chance)
+      if (Math.random() < 0.3) {
+        const bidAmount = auction.currentPrice + Math.floor(Math.random() * 2000000) + 1000000;
+        
+        // Don't bid more than club's budget
+        if (bidAmount <= club.budget) {
+          try {
+            const bidResponse = await axios.post(`http://localhost:3000/api/auctions/${auction._id}/bid`, {
+              clubId: club._id,
+              amount: bidAmount
+            });
+            
+            bids.push({
+              club: club.name,
+              amount: bidAmount,
+              success: true
+            });
+          } catch (error) {
+            bids.push({
+              club: club.name,
+              amount: bidAmount,
+              success: false,
+              error: error.response?.data?.message
+            });
+          }
+        }
+      }
+    }
+
+    res.json({
+      message: 'Automatic bidding completed',
+      bids: bids,
+      totalBids: bids.length
+    });
+  } catch (err) {
+    console.error('Auto bid error:', err);
+    res.status(500).json({ message: err.message });
   }
 });
 

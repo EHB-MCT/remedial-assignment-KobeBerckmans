@@ -178,6 +178,22 @@ function TransferMarket({ user, club, onClubUpdate }) {
     }
   };
 
+  const triggerAutoBidding = async (auctionId) => {
+    try {
+      console.log('Triggering auto bidding for auction:', auctionId);
+      const response = await axios.post(`http://localhost:3000/api/auctions/${auctionId}/auto-bid`);
+      console.log('Auto bidding response:', response.data);
+      
+      // Refresh auctions to show new bids
+      fetchAuctions();
+      
+      setMessage(`🤖 Auto bidding triggered! ${response.data.totalBids} clubs placed bids.`);
+    } catch (error) {
+      console.error('Auto bidding error:', error);
+      setMessage(`❌ ${error.response?.data?.message || 'Failed to trigger auto bidding'}`);
+    }
+  };
+
   const formatTimeLeft = (timeLeft) => {
     if (timeLeft <= 0) return 'Ended';
 
@@ -320,6 +336,24 @@ function TransferMarket({ user, club, onClubUpdate }) {
                     }}
                   >
                     Test Process
+                  </button>
+                  
+                  {/* Auto bid button */}
+                  <button 
+                    onClick={() => triggerAutoBidding(auction._id)}
+                    className="auto-bid-btn"
+                    style={{ 
+                      background: '#17a2b8', 
+                      color: 'white', 
+                      border: 'none', 
+                      padding: '5px 10px', 
+                      borderRadius: '4px',
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      marginLeft: '5px'
+                    }}
+                  >
+                    🤖 Auto Bid
                   </button>
                 </div>
               )}

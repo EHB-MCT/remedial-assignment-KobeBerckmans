@@ -59,25 +59,47 @@ function MyClub({ user, club }) {
 
       console.log('Found player to sell:', player);
 
-      // Calculate price based on goals, assists, and appearances
+      // Calculate suggested price based on goals, assists, and appearances
       const basePrice = 5000000; // 5M base
       const goalsValue = player.goals * 200000; // 200k per goal
       const assistsValue = player.assists * 150000; // 150k per assist
       const appearancesValue = player.appearances * 50000; // 50k per appearance
-      const sellPrice = basePrice + goalsValue + assistsValue + appearancesValue;
+      const suggestedPrice = basePrice + goalsValue + assistsValue + appearancesValue;
 
-      console.log('Calculated sell price:', sellPrice);
+      console.log('Suggested price:', suggestedPrice);
+
+      // Ask user for custom price
+      const customPrice = prompt(
+        `Set your asking price for ${playerName}:\n\n` +
+        `Suggested price: €${suggestedPrice.toLocaleString()}\n` +
+        `Player stats: ${player.goals} goals, ${player.assists} assists, ${player.appearances} apps\n\n` +
+        `Enter your price (in euros):`,
+        suggestedPrice.toString()
+      );
+
+      if (!customPrice || isNaN(parseInt(customPrice))) {
+        setMessage('❌ Invalid price entered');
+        return;
+      }
+
+      const askingPrice = parseInt(customPrice);
+      const startingPrice = Math.floor(askingPrice * 0.7); // 70% of asking price
+      const buyNowPrice = askingPrice;
+
+      console.log('User set price:', askingPrice);
+      console.log('Starting price:', startingPrice);
+      console.log('Buy now price:', buyNowPrice);
 
       // Create auction for the player
       const auctionData = {
         playerId: playerId,
         playerName: playerName,
         currentClub: userClub._id,
-        startingPrice: Math.floor(sellPrice * 0.8), // 80% of calculated value
-        currentPrice: Math.floor(sellPrice * 0.8),
-        buyNowPrice: sellPrice,
-        endTime: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
-        description: `Player available for transfer from ${userClub.name}`
+        startingPrice: startingPrice,
+        currentPrice: startingPrice,
+        buyNowPrice: buyNowPrice,
+        endTime: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+        description: `${playerName} available for transfer from ${userClub.name}. ${player.goals} goals, ${player.assists} assists this season.`
       };
 
       console.log('Creating auction with data:', auctionData);
@@ -85,7 +107,7 @@ function MyClub({ user, club }) {
       const response = await axios.post('http://localhost:3000/api/auctions', auctionData);
       
       if (response.status === 201) {
-        setMessage(`✅ ${playerName} listed for sale! Starting price: €${Math.floor(sellPrice * 0.8).toLocaleString()}`);
+        setMessage(`✅ ${playerName} listed for sale!\nStarting price: €${startingPrice.toLocaleString()}\nBuy now: €${buyNowPrice.toLocaleString()}\nDuration: 15 minutes`);
         
         // Remove player from club
         const updatedPlayerIds = userClub.playerIds.filter(id => id !== playerId);
