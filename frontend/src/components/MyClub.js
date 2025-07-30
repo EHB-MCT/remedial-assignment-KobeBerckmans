@@ -15,16 +15,31 @@ function MyClub() {
   const fetchUserClub = async () => {
     try {
       const clubsResponse = await axios.get('http://localhost:3000/api/clubs');
+      console.log('All clubs:', clubsResponse.data);
+      
       if (clubsResponse.data.length > 0) {
+        // Select the first club as user's club (Manchester City)
         const club = clubsResponse.data[0];
+        console.log('Selected club:', club);
+        console.log('Club ID:', club._id);
+        console.log('Club name:', club.name);
+        
         setUserClub(club);
+        
         if (club.playerIds && club.playerIds.length > 0) {
+          console.log('Club has players:', club.playerIds);
           const playersResponse = await axios.get('http://localhost:3000/api/players');
           const allPlayers = playersResponse.data;
           const clubPlayerIds = club.playerIds.map(id => id.toString());
           const players = allPlayers.filter(player => clubPlayerIds.includes(player._id.toString()));
+          console.log('Found club players:', players.length);
           setClubPlayers(players);
+        } else {
+          console.log('Club has no players');
+          setClubPlayers([]);
         }
+      } else {
+        console.log('No clubs found in database');
       }
       setLoading(false);
     } catch (error) {
@@ -39,6 +54,11 @@ function MyClub() {
       return;
     }
 
+    console.log('User club:', userClub);
+    console.log('Club ID:', userClub._id);
+    console.log('Club name:', userClub.name);
+    console.log('Player ID to sell:', playerId);
+
     try {
       // Calculate sell price based on player stats
       const player = clubPlayers.find(p => p._id.toString() === playerId);
@@ -47,12 +67,16 @@ function MyClub() {
         return;
       }
 
+      console.log('Found player to sell:', player);
+
       // Calculate price based on goals, assists, and appearances
       const basePrice = 5000000; // 5M base
       const goalsValue = player.goals * 200000; // 200k per goal
       const assistsValue = player.assists * 150000; // 150k per assist
       const appearancesValue = player.appearances * 50000; // 50k per appearance
       const sellPrice = basePrice + goalsValue + assistsValue + appearancesValue;
+
+      console.log('Calculated sell price:', sellPrice);
 
       // Create auction for the player
       const auctionData = {
@@ -75,20 +99,30 @@ function MyClub() {
         
         // Remove player from club
         const updatedPlayerIds = userClub.playerIds.filter(id => id !== playerId);
-        console.log('Updating club with playerIds:', updatedPlayerIds);
+        console.log('Current playerIds:', userClub.playerIds);
+        console.log('Updated playerIds:', updatedPlayerIds);
+        console.log('Club ID for update:', userClub._id);
         
-        const updateResponse = await axios.put(`http://localhost:3000/api/clubs/${userClub._id}`, {
-          playerIds: updatedPlayerIds
-        });
+        try {
+          const updateResponse = await axios.put(`http://localhost:3000/api/clubs/${userClub._id}`, {
+            playerIds: updatedPlayerIds
+          });
 
-        console.log('Club update response:', updateResponse.data);
+          console.log('Club update response:', updateResponse.data);
 
-        // Refresh club data
-        fetchUserClub();
+          // Refresh club data
+          fetchUserClub();
+        } catch (updateError) {
+          console.error('Error updating club:', updateError);
+          console.error('Update error response:', updateError.response?.data);
+          setMessage(`⚠️ Player listed for sale but failed to update club. Please refresh the page.`);
+        }
       }
     } catch (error) {
       console.error('Error selling player:', error);
       console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      console.error('Error URL:', error.config?.url);
       setMessage(`❌ ${error.response?.data?.message || 'Failed to sell player'}`);
     }
   };
