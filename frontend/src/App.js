@@ -3,6 +3,7 @@ import './App.css';
 import PlayerList from './components/PlayerList';
 import SimulationButton from './components/SimulationButton';
 import TransferList from './components/TransferList';
+import TransferMarket from './components/TransferMarket';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 
 function Home() {
@@ -54,19 +55,11 @@ function MyClubPage() {
 }
 
 function TransfersPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const handleSimulationComplete = () => {
-    // Trigger refresh of transfer list
-    setRefreshKey(prev => prev + 1);
-  };
-
   return (
     <main className="app-main">
       <section id="transfers">
-        <h2>Transfers</h2>
-        <SimulationButton onSimulationComplete={handleSimulationComplete} />
-        <TransferList key={refreshKey} />
+        <h2>Transfer Market</h2>
+        <TransferMarket />
       </section>
     </main>
   );

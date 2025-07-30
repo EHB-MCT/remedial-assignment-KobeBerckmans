@@ -20,9 +20,11 @@ mongoose.connect(mongoUri, {
 const clubsRouter = require('./routes/clubs');
 const transfersRouter = require('./routes/transfers');
 const simulationRouter = require('./routes/simulation');
+const auctionsRouter = require('./routes/auctions');
 app.use('/api/clubs', clubsRouter);
 app.use('/api/transfers', transfersRouter);
 app.use('/api/simulation', simulationRouter);
+app.use('/api/auctions', auctionsRouter);
 
 const PORT = process.env.PORT || 3000;
 
