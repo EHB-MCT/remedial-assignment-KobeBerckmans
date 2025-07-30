@@ -77,7 +77,7 @@ function MyClub() {
       ) : (
         <div className="players-grid">
           {clubPlayers.map(player => (
-            <div key={player._id} className="player-card">
+            <div key={player._id} className="my-club-player-card">
               <div className="player-header">
                 <h3>{player.name}</h3>
                 <span className="player-position">{player.position}</span>
