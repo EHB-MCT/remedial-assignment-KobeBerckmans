@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './TransferMarket.css';
 
-function TransferMarket() {
+function TransferMarket({ user, club }) {
   const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAuction, setSelectedAuction] = useState(null);
@@ -13,8 +13,10 @@ function TransferMarket() {
   const [timerInterval, setTimerInterval] = useState(null);
 
   useEffect(() => {
-    fetchAuctions();
-    fetchUserClub();
+    if (club) {
+      setUserClub(club);
+      fetchAuctions();
+    }
     
     // Set up real-time updates every 5 seconds
     const interval = setInterval(fetchAuctions, 5000);
@@ -35,7 +37,7 @@ function TransferMarket() {
       if (interval) clearInterval(interval);
       if (timer) clearInterval(timer);
     };
-  }, []);
+  }, [club]);
 
   const calculateTimeLeft = (endTime) => {
     const now = new Date();
@@ -82,17 +84,6 @@ function TransferMarket() {
     }
   };
 
-  const fetchUserClub = async () => {
-    try {
-      const response = await axios.get('http://localhost:3000/api/clubs');
-      if (response.data.length > 0) {
-        setUserClub(response.data[0]);
-      }
-    } catch (error) {
-      console.error('Failed to fetch user club:', error);
-    }
-  };
-
   const placeBid = async (auctionId) => {
     if (!userClub || !bidAmount) {
       setMessage('Please enter a valid bid amount');
@@ -108,7 +99,6 @@ function TransferMarket() {
       setMessage('✅ Bid placed successfully!');
       setBidAmount('');
       fetchAuctions(); // Immediate refresh
-      fetchUserClub(); // Update club budget
     } catch (error) {
       setMessage(`❌ ${error.response?.data?.message || 'Failed to place bid'}`);
     }
@@ -127,7 +117,6 @@ function TransferMarket() {
       
       setMessage('✅ Player purchased successfully!');
       fetchAuctions();
-      fetchUserClub();
     } catch (error) {
       setMessage(`❌ ${error.response?.data?.message || 'Failed to purchase player'}`);
     }
