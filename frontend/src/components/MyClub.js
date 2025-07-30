@@ -2,44 +2,34 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './MyClub.css';
 
-function MyClub() {
+function MyClub({ user, club }) {
   const [userClub, setUserClub] = useState(null);
   const [clubPlayers, setClubPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    fetchUserClub();
-  }, []);
+    if (club) {
+      fetchUserClub();
+    }
+  }, [club]);
 
   const fetchUserClub = async () => {
     try {
-      const clubsResponse = await axios.get('http://localhost:3000/api/clubs');
-      console.log('All clubs:', clubsResponse.data);
+      // Use the club passed as prop (user's own club)
+      setUserClub(club);
       
-      if (clubsResponse.data.length > 0) {
-        // Select the first club as user's club (Manchester City)
-        const club = clubsResponse.data[0];
-        console.log('Selected club:', club);
-        console.log('Club ID:', club._id);
-        console.log('Club name:', club.name);
-        
-        setUserClub(club);
-        
-        if (club.playerIds && club.playerIds.length > 0) {
-          console.log('Club has players:', club.playerIds);
-          const playersResponse = await axios.get('http://localhost:3000/api/players');
-          const allPlayers = playersResponse.data;
-          const clubPlayerIds = club.playerIds.map(id => id.toString());
-          const players = allPlayers.filter(player => clubPlayerIds.includes(player._id.toString()));
-          console.log('Found club players:', players.length);
-          setClubPlayers(players);
-        } else {
-          console.log('Club has no players');
-          setClubPlayers([]);
-        }
+      if (club.playerIds && club.playerIds.length > 0) {
+        console.log('Club has players:', club.playerIds);
+        const playersResponse = await axios.get('http://localhost:3000/api/players');
+        const allPlayers = playersResponse.data;
+        const clubPlayerIds = club.playerIds.map(id => id.toString());
+        const players = allPlayers.filter(player => clubPlayerIds.includes(player._id.toString()));
+        console.log('Found club players:', players.length);
+        setClubPlayers(players);
       } else {
-        console.log('No clubs found in database');
+        console.log('Club has no players');
+        setClubPlayers([]);
       }
       setLoading(false);
     } catch (error) {

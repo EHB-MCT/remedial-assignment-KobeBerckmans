@@ -2,92 +2,308 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    color: #fff;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .app-header {
-    background: rgba(30, 60, 114, 0.95);
-    padding: 1.5rem 2rem 1rem 2rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 8px rgba(30, 60, 114, 0.1);
+    flex-wrap: wrap;
 }
 
 .app-header h1 {
-    margin: 0 0 0.5rem 0;
-    font-size: 2.5rem;
-    letter-spacing: 2px;
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.app-title-link {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.3s ease;
+}
+
+.app-title-link:hover {
+    color: #667eea;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 0 20px;
+}
+
+.welcome-text {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.club-name {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.logout-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
 }
 
 .nav-list {
     list-style: none;
     display: flex;
     gap: 2rem;
-    padding: 0;
     margin: 0;
+    padding: 0;
 }
 
 .nav-list li a {
-    color: #fff;
     text-decoration: none;
-    font-weight: 500;
-    font-size: 1.1rem;
-    transition: color 0.2s;
+    color: #2c3e50;
+    font-weight: 600;
+    transition: color 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 
 .nav-list li a:hover {
-    color: #ffd700;
-}
-
-.app-title-link {
-    color: inherit;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.app-title-link:hover {
-    color: #ffd700;
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
 }
 
 .app-main {
     flex: 1;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Homepage specific styling */
+.homepage-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
     gap: 2rem;
-    padding: 2rem 4vw;
+    margin-top: 2rem;
 }
 
-.app-main section {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 1rem;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(30, 60, 114, 0.08);
-    min-height: 200px;
+.homepage-section {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 2rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.app-main h2 {
-    margin-top: 0;
-    color: #ffd700;
-    font-size: 1.5rem;
+.homepage-section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.homepage-section h2 {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.homepage-section h2::before {
+    content: '';
+    width: 4px;
+    height: 25px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+}
+
+.homepage-section p {
+    color: #2c3e50;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+.homepage-section strong {
+    color: #667eea;
+    font-weight: 700;
+}
+
+/* My Club section */
+.myclub-section {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.myclub-section h2::before {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+/* Players section */
+.players-section {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(32, 201, 151, 0.1) 100%);
+    border: 2px solid rgba(40, 167, 69, 0.2);
+}
+
+.players-section h2::before {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+/* Transfers section */
+.transfers-section {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);
+    border: 2px solid rgba(255, 193, 7, 0.2);
+}
+
+.transfers-section h2::before {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+}
+
+/* History section */
+.history-section {
+    background: linear-gradient(135deg, rgba(108, 117, 125, 0.1) 0%, rgba(73, 80, 87, 0.1) 100%);
+    border: 2px solid rgba(108, 117, 125, 0.2);
+}
+
+.history-section h2::before {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+/* Welcome banner */
+.welcome-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.welcome-banner h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.welcome-banner p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* Stats cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.stat-card .stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ffffff;
+    display: block;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.stat-card .stat-label {
+    font-size: 0.9rem;
+    color: #ffffff;
+    margin-top: 0.5rem;
+    font-weight: 600;
+    opacity: 0.95;
 }
 
 .app-footer {
-    background: rgba(30, 60, 114, 0.95);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 1rem 2rem;
     text-align: center;
-    padding: 1rem 0;
-    font-size: 1rem;
-    letter-spacing: 1px;
-    margin-top: auto;
+    color: #2c3e50;
+    font-weight: 600;
 }
 
-@media (max-width: 900px) {
+/* Responsive design */
+@media (max-width: 768px) {
+    .app-header {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .user-info {
+        order: 2;
+        margin: 0;
+    }
+
+    .nav-list {
+        order: 3;
+        gap: 1rem;
+    }
+
     .app-main {
+        padding: 1rem;
+    }
+
+    .homepage-container {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto auto;
-        padding: 1rem 2vw;
+        gap: 1rem;
+    }
+
+    .welcome-banner h1 {
+        font-size: 2rem;
+    }
+
+    .welcome-banner p {
+        font-size: 1rem;
+    }
+
+    .homepage-section {
+        padding: 1.5rem;
+    }
+
+    .homepage-section h2 {
+        font-size: 1.5rem;
     }
 }
