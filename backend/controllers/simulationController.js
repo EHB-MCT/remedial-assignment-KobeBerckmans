@@ -265,7 +265,7 @@ const simulateDay = async (req, res) => {
     // Create new auctions
     for (const { player, club } of selectedPlayers) {
       const endTime = new Date();
-      endTime.setHours(endTime.getHours() + Math.floor(Math.random() * 6) + 2); // 2-8 hours
+      endTime.setMinutes(endTime.getMinutes() + Math.floor(Math.random() * 10) + 5); // 5-15 minutes
 
       const startingPrice = Math.floor(player.marketValue * (0.7 + Math.random() * 0.3));
       const buyNowPrice = Math.floor(player.marketValue * (1.1 + Math.random() * 0.4));

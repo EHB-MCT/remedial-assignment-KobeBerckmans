@@ -38,6 +38,7 @@
     margin-bottom: 20px;
     border-radius: 8px;
     font-weight: bold;
+    text-align: center;
 }
 
 .message.success {
@@ -174,12 +175,38 @@
 
 .time-left strong {
     font-size: 1rem;
-    color: #e74c3c;
     font-weight: bold;
 }
 
-.time-left strong.ended {
+.time-normal {
+    color: #28a745;
+}
+
+.time-warning {
+    color: #ffc107;
+}
+
+.time-urgent {
     color: #dc3545;
+    animation: pulse 1s infinite;
+}
+
+.time-ended {
+    color: #6c757d;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 .highest-bidder {

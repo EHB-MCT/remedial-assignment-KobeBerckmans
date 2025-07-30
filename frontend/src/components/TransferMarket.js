@@ -9,12 +9,19 @@ function TransferMarket() {
   const [bidAmount, setBidAmount] = useState('');
   const [userClub, setUserClub] = useState(null);
   const [message, setMessage] = useState('');
+  const [refreshInterval, setRefreshInterval] = useState(null);
 
   useEffect(() => {
     fetchAuctions();
     fetchUserClub();
-    const interval = setInterval(fetchAuctions, 10000); // Refresh every 10 seconds
-    return () => clearInterval(interval);
+    
+    // Set up real-time updates every 5 seconds
+    const interval = setInterval(fetchAuctions, 5000);
+    setRefreshInterval(interval);
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, []);
 
   const fetchAuctions = async () => {
@@ -30,10 +37,9 @@ function TransferMarket() {
 
   const fetchUserClub = async () => {
     try {
-      // For now, we'll use the first club as the user's club
       const response = await axios.get('http://localhost:3000/api/clubs');
       if (response.data.length > 0) {
-        setUserClub(response.data[0]); // Use first club as user's club
+        setUserClub(response.data[0]);
       }
     } catch (error) {
       console.error('Failed to fetch user club:', error);
@@ -52,11 +58,12 @@ function TransferMarket() {
         amount: parseInt(bidAmount)
       });
       
-      setMessage('Bid placed successfully!');
+      setMessage('✅ Bid placed successfully!');
       setBidAmount('');
-      fetchAuctions();
+      fetchAuctions(); // Immediate refresh
+      fetchUserClub(); // Update club budget
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Failed to place bid');
+      setMessage(`❌ ${error.response?.data?.message || 'Failed to place bid'}`);
     }
   };
 
@@ -71,10 +78,11 @@ function TransferMarket() {
         clubId: userClub._id
       });
       
-      setMessage('Player purchased successfully!');
+      setMessage('✅ Player purchased successfully!');
       fetchAuctions();
+      fetchUserClub();
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Failed to purchase player');
+      setMessage(`❌ ${error.response?.data?.message || 'Failed to purchase player'}`);
     }
   };
 
@@ -85,11 +93,14 @@ function TransferMarket() {
 
     if (timeLeft <= 0) return 'Ended';
 
-    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+    const minutes = Math.floor(timeLeft / (1000 * 60));
     const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
-    return `${hours}h ${minutes}m ${seconds}s`;
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
   };
 
   const formatAmount = (amount) => {
@@ -99,6 +110,17 @@ function TransferMarket() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const getTimeLeftColor = (endTime) => {
+    const now = new Date();
+    const end = new Date(endTime);
+    const timeLeft = end - now;
+    
+    if (timeLeft <= 0) return 'ended';
+    if (timeLeft <= 60000) return 'urgent'; // Less than 1 minute
+    if (timeLeft <= 300000) return 'warning'; // Less than 5 minutes
+    return 'normal';
   };
 
   if (loading) {
@@ -118,7 +140,7 @@ function TransferMarket() {
       </div>
 
       {message && (
-        <div className={`message ${message.includes('successfully') ? 'success' : 'error'}`}>
+        <div className={`message ${message.includes('✅') ? 'success' : 'error'}`}>
           {message}
         </div>
       )}
@@ -126,7 +148,7 @@ function TransferMarket() {
       <div className="auctions-grid">
         {auctions.length === 0 ? (
           <div className="no-auctions">
-            <p>No active auctions. Players will be listed here when clubs put them up for transfer.</p>
+            <p>No active auctions. Run a daily simulation to create new auctions!</p>
           </div>
         ) : (
           auctions.map(auction => (
@@ -157,7 +179,7 @@ function TransferMarket() {
 
                 <div className="time-left">
                   <span>Time Left:</span>
-                  <strong className={formatTimeLeft(auction.endTime) === 'Ended' ? 'ended' : ''}>
+                  <strong className={`time-${getTimeLeftColor(auction.endTime)}`}>
                     {formatTimeLeft(auction.endTime)}
                   </strong>
                 </div>
@@ -175,7 +197,7 @@ function TransferMarket() {
                   <div className="bid-section">
                     <input
                       type="number"
-                      placeholder="Enter bid amount"
+                      placeholder={`Min bid: ${formatAmount(auction.currentPrice + 1000000)}`}
                       value={bidAmount}
                       onChange={(e) => setBidAmount(e.target.value)}
                       min={auction.currentPrice + 1000000}
@@ -202,9 +224,9 @@ function TransferMarket() {
 
               {auction.bids.length > 0 && (
                 <div className="bid-history">
-                  <h4>Bid History</h4>
+                  <h4>Recent Bids</h4>
                   <div className="bids-list">
-                    {auction.bids.slice(-5).reverse().map((bid, index) => (
+                    {auction.bids.slice(-3).reverse().map((bid, index) => (
                       <div key={index} className="bid-item">
                         <span>{bid.club.name}</span>
                         <span>{formatAmount(bid.amount)}</span>
