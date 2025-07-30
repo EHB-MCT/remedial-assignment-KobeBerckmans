@@ -145,6 +145,40 @@ router.post('/:id/buy-now', async (req, res) => {
       return res.status(400).json({ message: 'Insufficient budget for buy now price' });
     }
 
+    // Get the selling club
+    const sellingClub = await Club.findById(auction.currentClub);
+    if (!sellingClub) {
+      return res.status(404).json({ message: 'Selling club not found' });
+    }
+
+    // Update club budgets and player lists
+    club.budget -= auction.buyNowPrice;
+    club.playerIds.push(auction.playerId);
+    
+    // Add transfer history for buying club
+    club.transferHistory.push({
+      playerId: auction.playerId,
+      type: 'IN',
+      amount: auction.buyNowPrice,
+      date: new Date()
+    });
+
+    // Remove player from selling club and add money
+    sellingClub.budget += auction.buyNowPrice;
+    sellingClub.playerIds = sellingClub.playerIds.filter(id => id !== auction.playerId);
+    
+    // Add transfer history for selling club
+    sellingClub.transferHistory.push({
+      playerId: auction.playerId,
+      type: 'OUT',
+      amount: auction.buyNowPrice,
+      date: new Date()
+    });
+
+    // Save both clubs
+    await club.save();
+    await sellingClub.save();
+
     // End auction and assign player
     auction.status = 'ended';
     auction.highestBid = auction.buyNowPrice;
@@ -188,6 +222,72 @@ router.get('/:id/status', async (req, res) => {
       timeLeft: timeLeft,
       endTime: auction.endTime
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST process ended auction
+router.post('/:id/process', async (req, res) => {
+  try {
+    const auction = await Auction.findById(req.params.id);
+    
+    if (!auction) {
+      return res.status(404).json({ message: 'Auction not found' });
+    }
+
+    if (auction.status !== 'active') {
+      return res.status(400).json({ message: 'Auction is not active' });
+    }
+
+    const now = new Date();
+    if (now <= auction.endTime) {
+      return res.status(400).json({ message: 'Auction has not ended yet' });
+    }
+
+    if (auction.highestBidder) {
+      // Get clubs
+      const buyingClub = await Club.findById(auction.highestBidder);
+      const sellingClub = await Club.findById(auction.currentClub);
+      
+      if (!buyingClub || !sellingClub) {
+        return res.status(404).json({ message: 'Club not found' });
+      }
+
+      // Update club budgets and player lists
+      buyingClub.budget -= auction.highestBid;
+      buyingClub.playerIds.push(auction.playerId);
+      
+      // Add transfer history for buying club
+      buyingClub.transferHistory.push({
+        playerId: auction.playerId,
+        type: 'IN',
+        amount: auction.highestBid,
+        date: new Date()
+      });
+
+      // Remove player from selling club and add money
+      sellingClub.budget += auction.highestBid;
+      sellingClub.playerIds = sellingClub.playerIds.filter(id => id !== auction.playerId);
+      
+      // Add transfer history for selling club
+      sellingClub.transferHistory.push({
+        playerId: auction.playerId,
+        type: 'OUT',
+        amount: auction.highestBid,
+        date: new Date()
+      });
+
+      // Save both clubs
+      await buyingClub.save();
+      await sellingClub.save();
+    }
+
+    // Mark auction as ended
+    auction.status = 'ended';
+    await auction.save();
+
+    res.json({ message: 'Auction processed successfully' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -244,17 +244,26 @@ const simulateDay = async (req, res) => {
     const numNewAuctions = Math.floor(Math.random() * 3) + 2; // 2-4 new auctions
     const selectedPlayers = [];
     
+    // Get all player IDs that are currently in clubs
+    const allClubs = await Club.find();
+    const playersInClubs = new Set();
+    allClubs.forEach(club => {
+      club.playerIds.forEach(playerId => {
+        playersInClubs.add(playerId);
+      });
+    });
+    
     for (let i = 0; i < numNewAuctions; i++) {
       const randomPlayer = players[Math.floor(Math.random() * players.length)];
       const randomClub = clubs[Math.floor(Math.random() * clubs.length)];
       
-      // Check if player is not already in an active auction
+      // Check if player is not already in any club and not in an active auction
       const existingAuction = await Auction.findOne({
         playerId: randomPlayer._id.toString(),
         status: 'active'
       });
 
-      if (!existingAuction) {
+      if (!existingAuction && !playersInClubs.has(randomPlayer._id.toString())) {
         selectedPlayers.push({
           player: randomPlayer,
           club: randomClub

@@ -27,7 +27,26 @@ function TransferMarket() {
   const fetchAuctions = async () => {
     try {
       const response = await axios.get('http://localhost:3000/api/auctions');
-      setAuctions(response.data);
+      const auctions = response.data;
+      
+      // Process any ended auctions
+      for (const auction of auctions) {
+        const now = new Date();
+        const endTime = new Date(auction.endTime);
+        
+        if (auction.status === 'active' && now > endTime) {
+          try {
+            await axios.post(`http://localhost:3000/api/auctions/${auction._id}/process`);
+            console.log(`Processed ended auction for ${auction.playerName}`);
+          } catch (error) {
+            console.error(`Failed to process auction ${auction._id}:`, error);
+          }
+        }
+      }
+      
+      // Fetch updated auctions
+      const updatedResponse = await axios.get('http://localhost:3000/api/auctions');
+      setAuctions(updatedResponse.data);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch auctions:', error);
