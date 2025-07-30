@@ -141,8 +141,14 @@ router.post('/:id/buy-now', async (req, res) => {
       return res.status(404).json({ message: 'Club not found' });
     }
 
+    console.log(`Buy now attempt for player: ${auction.playerName}`);
+    console.log(`Club budget: ${club.budget}, Buy now price: ${auction.buyNowPrice}`);
+    console.log(`Budget check: ${club.budget >= auction.buyNowPrice ? 'PASS' : 'FAIL'}`);
+
     if (club.budget < auction.buyNowPrice) {
-      return res.status(400).json({ message: 'Insufficient budget for buy now price' });
+      return res.status(400).json({ 
+        message: `Insufficient budget. You have ${club.budget} but need ${auction.buyNowPrice}` 
+      });
     }
 
     // Get the selling club
@@ -150,6 +156,8 @@ router.post('/:id/buy-now', async (req, res) => {
     if (!sellingClub) {
       return res.status(404).json({ message: 'Selling club not found' });
     }
+
+    console.log(`Processing buy now: ${club.name} buying ${auction.playerName} for ${auction.buyNowPrice}`);
 
     // Update club budgets and player lists
     club.budget -= auction.buyNowPrice;
@@ -179,6 +187,8 @@ router.post('/:id/buy-now', async (req, res) => {
     await club.save();
     await sellingClub.save();
 
+    console.log(`Buy now successful. ${club.name} now has ${club.playerIds.length} players and ${club.budget} budget`);
+
     // End auction and assign player
     auction.status = 'ended';
     auction.highestBid = auction.buyNowPrice;
@@ -200,6 +210,7 @@ router.post('/:id/buy-now', async (req, res) => {
 
     res.json(populatedAuction);
   } catch (err) {
+    console.error('Buy now error:', err);
     res.status(400).json({ message: err.message });
   }
 });

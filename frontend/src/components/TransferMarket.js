@@ -126,13 +126,31 @@ function TransferMarket({ user, club, onClubUpdate }) {
     }
 
     try {
+      console.log('Attempting buy now for auction:', auctionId);
+      console.log('User club budget:', userClub.budget);
+      
       const response = await axios.post(`http://localhost:3000/api/auctions/${auctionId}/buy-now`, {
         clubId: userClub._id
       });
       
+      console.log('Buy now response:', response.data);
       setMessage('✅ Player purchased successfully!');
+      
+      // Refresh auctions and club data
       fetchAuctions();
+      
+      // Update club data if onClubUpdate is available
+      if (onClubUpdate) {
+        try {
+          const clubResponse = await axios.get(`http://localhost:3000/api/clubs/${userClub._id}`);
+          onClubUpdate(clubResponse.data);
+        } catch (clubError) {
+          console.error('Failed to refresh club data after purchase:', clubError);
+        }
+      }
     } catch (error) {
+      console.error('Buy now error:', error);
+      console.error('Error response:', error.response?.data);
       setMessage(`❌ ${error.response?.data?.message || 'Failed to purchase player'}`);
     }
   };
@@ -259,6 +277,7 @@ function TransferMarket({ user, club, onClubUpdate }) {
                     onClick={() => buyNow(auction._id)}
                     disabled={userClub.budget < auction.buyNowPrice}
                     className="buy-now-btn"
+                    title={`Your budget: ${formatAmount(userClub.budget)} | Buy now price: ${formatAmount(auction.buyNowPrice)}`}
                   >
                     Buy Now
                   </button>
