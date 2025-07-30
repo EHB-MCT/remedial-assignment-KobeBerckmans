@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './TransferMarket.css';
 
-function TransferMarket({ user, club }) {
+function TransferMarket({ user, club, onClubUpdate }) {
   const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAuction, setSelectedAuction] = useState(null);
@@ -61,15 +61,30 @@ function TransferMarket({ user, club }) {
       for (const auction of auctionsWithTime) {
         if (auction.status === 'active' && auction.timeLeft <= 0) {
           try {
-            await axios.post(`http://localhost:3000/api/auctions/${auction._id}/process`);
-            console.log(`Processed ended auction for ${auction.playerName}`);
+            console.log(`Processing ended auction for ${auction.playerName}`);
+            const processResponse = await axios.post(`http://localhost:3000/api/auctions/${auction._id}/process`);
+            console.log('Auction processed:', processResponse.data);
+            
+            // Refresh user club data after processing
+            if (userClub) {
+              try {
+                const clubResponse = await axios.get(`http://localhost:3000/api/clubs/${userClub._id}`);
+                console.log('Updated club data:', clubResponse.data);
+                // Update the club data in the parent component
+                if (typeof onClubUpdate === 'function') {
+                  onClubUpdate(clubResponse.data);
+                }
+              } catch (clubError) {
+                console.error('Failed to refresh club data:', clubError);
+              }
+            }
           } catch (error) {
             console.error(`Failed to process auction ${auction._id}:`, error);
           }
         }
       }
       
-      // Fetch updated auctions
+      // Fetch updated auctions after processing
       const updatedResponse = await axios.get('http://localhost:3000/api/auctions');
       const updatedAuctions = updatedResponse.data.map(auction => ({
         ...auction,

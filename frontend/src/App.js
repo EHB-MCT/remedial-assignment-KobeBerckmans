@@ -89,13 +89,13 @@ function MyClubPage({ user, club }) {
   );
 }
 
-function TransfersPage({ user, club }) {
+function TransfersPage({ user, club, onClubUpdate }) {
   return (
     <main className="app-main">
       <section id="transfers">
         <h2>Transfer Market</h2>
         <DailySimulation />
-        <TransferMarket user={user} club={club} />
+        <TransferMarket user={user} club={club} onClubUpdate={onClubUpdate} />
       </section>
     </main>
   );
@@ -156,6 +156,11 @@ function App() {
     setIsAuthenticated(false);
   };
 
+  const handleClubUpdate = (updatedClub) => {
+    setClub(updatedClub);
+    localStorage.setItem('club', JSON.stringify(updatedClub));
+  };
+
   const switchToRegister = () => {
     setShowLogin(false);
   };
@@ -200,7 +205,7 @@ function App() {
           <Route path="/" element={<Home user={user} club={club} />} />
           <Route path="/players" element={<PlayersPage />} />
           <Route path="/myclub" element={<MyClubPage user={user} club={club} />} />
-          <Route path="/transfers" element={<TransfersPage user={user} club={club} />} />
+          <Route path="/transfers" element={<TransfersPage user={user} club={club} onClubUpdate={handleClubUpdate} />} />
           <Route path="/history" element={<HistoryPage />} />
         </Routes>
         <footer className="app-footer">

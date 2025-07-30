@@ -245,14 +245,21 @@ router.post('/:id/process', async (req, res) => {
       return res.status(400).json({ message: 'Auction has not ended yet' });
     }
 
+    console.log(`Processing auction for player: ${auction.playerName}`);
+    console.log(`Highest bidder: ${auction.highestBidder}`);
+    console.log(`Highest bid: ${auction.highestBid}`);
+
     if (auction.highestBidder) {
       // Get clubs
       const buyingClub = await Club.findById(auction.highestBidder);
       const sellingClub = await Club.findById(auction.currentClub);
       
       if (!buyingClub || !sellingClub) {
+        console.error('Club not found:', { buyingClub: !!buyingClub, sellingClub: !!sellingClub });
         return res.status(404).json({ message: 'Club not found' });
       }
+
+      console.log(`Transferring player from ${sellingClub.name} to ${buyingClub.name}`);
 
       // Update club budgets and player lists
       buyingClub.budget -= auction.highestBid;
@@ -281,6 +288,10 @@ router.post('/:id/process', async (req, res) => {
       // Save both clubs
       await buyingClub.save();
       await sellingClub.save();
+
+      console.log(`Successfully transferred player. ${buyingClub.name} now has ${buyingClub.playerIds.length} players`);
+    } else {
+      console.log('No highest bidder found for this auction');
     }
 
     // Mark auction as ended
@@ -289,6 +300,7 @@ router.post('/:id/process', async (req, res) => {
 
     res.json({ message: 'Auction processed successfully' });
   } catch (err) {
+    console.error('Error processing auction:', err);
     res.status(500).json({ message: err.message });
   }
 });
