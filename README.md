@@ -7,7 +7,7 @@
 
 A comprehensive football transfer market simulation platform with real-time auctions, AI bidding, and player form analysis. Built with modern web technologies and following SOLID principles.
 
-## 🚀 Features
+## Features
 
 ### Core Functionality
 - **Live Auctions**: Real-time bidding system with countdown timers
@@ -23,16 +23,17 @@ A comprehensive football transfer market simulation platform with real-time auct
 - **Error Handling**: Comprehensive error management and recovery
 - **Performance Optimization**: Efficient data loading and caching
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Installation](#installation)
 - [Usage](#usage)
 - [Architecture](#architecture)
 - [API Documentation](#api-documentation)
 - [Contributing](#contributing)
+- [Code of Conduct](#code-of-conduct)
 - [License](#license)
 
-## 🛠️ Installation
+## Installation
 
 ### Prerequisites
 
@@ -72,7 +73,7 @@ npm start
 
 The application will be available at `http://localhost:3000`
 
-## 🎮 Usage
+## Usage
 
 ### Getting Started
 
@@ -104,7 +105,7 @@ The application will be available at `http://localhost:3000`
 - Transfer history and analytics
 - Player selling functionality
 
-## 🏗️ Architecture
+## Architecture
 
 ### Backend Architecture
 
@@ -146,7 +147,7 @@ frontend/src/
 - **Interface Segregation**: Focused, specific interfaces
 - **Dependency Inversion**: High-level modules independent of low-level
 
-## 📚 API Documentation
+## API Documentation
 
 ### Authentication Endpoints
 
@@ -188,7 +189,7 @@ POST /api/simulation/transfer
 POST /api/simulation/day
 ```
 
-## 🔧 Development
+## Development
 
 ### Code Style
 
@@ -230,7 +231,7 @@ cd frontend
 npm test
 ```
 
-## 🐛 Debugging
+## Debugging
 
 ### Common Issues
 
@@ -251,7 +252,7 @@ node backend/scripts/fixPlayerAssignments.js
 node backend/scripts/restartAutoBidder.js
 ```
 
-## 🤝 Contributing
+## Contributing
 
 ### Development Setup
 
@@ -270,7 +271,11 @@ node backend/scripts/restartAutoBidder.js
 - Update documentation as needed
 - Follow the established design patterns
 
-## 📊 Performance
+## Code of Conduct
+
+This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to kobe.berckmans@student.ehb.be.
+
+## Performance
 
 ### Optimization Techniques
 
@@ -286,7 +291,7 @@ node backend/scripts/restartAutoBidder.js
 - **Performance Metrics**: Response time monitoring
 - **User Analytics**: Usage pattern analysis
 
-## 🔒 Security
+## Security
 
 ### Implemented Measures
 
@@ -296,7 +301,7 @@ node backend/scripts/restartAutoBidder.js
 - **CORS Configuration**: Proper cross-origin settings
 - **Rate Limiting**: API request throttling
 
-## 📈 Roadmap
+## Roadmap
 
 ### Planned Features
 
@@ -315,18 +320,18 @@ node backend/scripts/restartAutoBidder.js
 - [ ] Docker containerization
 - [ ] CI/CD pipeline setup
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **React Team**: For the amazing frontend framework
 - **Node.js Community**: For the robust backend runtime
 - **MongoDB**: For the flexible database solution
 - **Open Source Contributors**: For inspiration and best practices
 
-## 📞 Support
+## Support
 
 For support and questions:
 
@@ -336,4 +341,5 @@ For support and questions:
 
 ---
 
-**Made with ❤️ by Kobe Berckmans**
+**Made with by Kobe Berckmans**
+

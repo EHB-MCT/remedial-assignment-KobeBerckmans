@@ -34,9 +34,9 @@ const connectDatabase = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('✅ Connected to MongoDB successfully');
+    console.log('Connected to MongoDB successfully');
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
+    console.error('MongoDB connection error:', error);
     process.exit(1);
   }
 };
@@ -101,7 +101,7 @@ const configureRoutes = () => {
 
       res.json(players);
     } catch (error) {
-      console.error('❌ Error fetching players:', error);
+      console.error('Error fetching players:', error);
       res.status(500).json({ 
         message: 'Error fetching players',
         error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
@@ -135,7 +135,7 @@ const configureErrorHandling = () => {
 
   // Global error handler
   app.use((error, req, res, next) => {
-    console.error('❌ Unhandled error:', error);
+    console.error('Unhandled error:', error);
     
     res.status(error.status || 500).json({
       message: error.message || 'Internal server error',
@@ -165,30 +165,30 @@ const startServer = async () => {
     // Start server
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`Health check: http://localhost:${PORT}/api/health`);
     });
     
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 };
 
 // Graceful shutdown handling
 process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM received, shutting down gracefully');
+  console.log('SIGTERM received, shutting down gracefully');
   mongoose.connection.close(() => {
-    console.log('✅ MongoDB connection closed');
+    console.log('MongoDB connection closed');
     process.exit(0);
   });
 });
 
 process.on('SIGINT', () => {
-  console.log('🛑 SIGINT received, shutting down gracefully');
+  console.log('SIGINT received, shutting down gracefully');
   mongoose.connection.close(() => {
-    console.log('✅ MongoDB connection closed');
+    console.log('MongoDB connection closed');
     process.exit(0);
   });
 });

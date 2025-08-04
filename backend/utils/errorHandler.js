@@ -83,9 +83,9 @@ class AuctionError extends Error {
  * @param {Function} next - Express next function
  */
 const handleError = (error, req, res, next) => {
-  console.error(`❌ Error: ${error.name} - ${error.message}`);
-  console.error(`📍 Path: ${req.path}`);
-  console.error(`🔍 Method: ${req.method}`);
+  console.error(`Error: ${error.name} - ${error.message}`);
+  console.error(`Path: ${req.path}`);
+  console.error(`Method: ${req.method}`);
   
   if (error.name === 'ValidationError') {
     return res.status(400).json({
@@ -225,7 +225,7 @@ const logError = (error, context = {}) => {
     context
   };
   
-  console.error('🚨 Error Log:', JSON.stringify(errorLog, null, 2));
+  console.error('Error Log:', JSON.stringify(errorLog, null, 2));
 };
 
 module.exports = {
