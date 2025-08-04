@@ -1,135 +1,339 @@
 # Football Transfer Market Simulation
 
-Een realistische voetbal transfermarkt simulatie met live auctions, AI biedingen, en club management.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-6+-green.svg)](https://www.mongodb.com/)
+
+A comprehensive football transfer market simulation platform with real-time auctions, AI bidding, and player form analysis. Built with modern web technologies and following SOLID principles.
 
 ## 🚀 Features
 
-- **Live Auctions**: Real-time veilingen met countdown timers
-- **AI Bidding**: Automatische AI clubs die bieden op spelers
-- **Club Management**: Beheer je club, budget en spelers
-- **Transfer History**: Volledige geschiedenis van alle transfers
-- **Daily Simulation**: Simuleer transfermarkt activiteit
+### Core Functionality
+- **Live Auctions**: Real-time bidding system with countdown timers
+- **AI Bidding**: Intelligent AI clubs with dynamic bidding strategies
+- **Player Form Analysis**: Comprehensive performance tracking and analytics
+- **Club Management**: Complete squad management with budget tracking
+- **Transfer History**: Detailed transaction logs and analytics
 
-## 🛠️ Recente Fixes
+### Technical Features
+- **Real-time Updates**: WebSocket-like polling for live data
+- **Atomic Operations**: MongoDB transactions for data consistency
+- **Responsive Design**: Mobile-first approach with modern UI/UX
+- **Error Handling**: Comprehensive error management and recovery
+- **Performance Optimization**: Efficient data loading and caching
 
-### Opgeloste Problemen:
-1. **Race Conditions**: Gebruik van MongoDB transactions voor atomische operaties
-2. **Speler Toewijzing**: Verbeterde speler toevoeging met `$addToSet` om duplicaten te voorkomen
-3. **Budget Synchronisatie**: Betere budget updates met atomic operations
-4. **Live Auction Bugs**: Verbeterde error handling en timing
-5. **Speler Verlies**: Spelers worden nu correct toegevoegd na aankoop
+## 📋 Table of Contents
 
-### Debug Scripts:
-- `checkPlayerAssignments.js`: Controleer speler toewijzingen
-- `fixPlayerAssignments.js`: Repareer inconsistente speler toewijzingen
+- [Installation](#installation)
+- [Usage](#usage)
+- [Architecture](#architecture)
+- [API Documentation](#api-documentation)
+- [Contributing](#contributing)
+- [License](#license)
 
-## 📋 Installatie
+## 🛠️ Installation
 
-### Backend
+### Prerequisites
+
+- Node.js 18+ 
+- MongoDB 6+
+- npm or yarn
+
+### Backend Setup
+
 ```bash
+# Clone the repository
+git clone https://github.com/EHB-MCT/remedial-assignment-KobeBerckmans.git
+cd remedial-assignment-KobeBerckmans
+
+# Install backend dependencies
 cd backend
 npm install
-```
 
-### Frontend
-```bash
-cd frontend
-npm install
-```
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your MongoDB connection string
 
-## 🚀 Starten
-
-### Backend
-```bash
-cd backend
+# Start the backend server
 npm start
 ```
 
-### Frontend
+### Frontend Setup
+
 ```bash
+# In a new terminal, navigate to frontend
 cd frontend
+npm install
+
+# Start the React development server
 npm start
 ```
 
-## 🔧 Debugging
+The application will be available at `http://localhost:3000`
 
-### Speler Toewijzingen Controleren
-```bash
-cd backend
-node scripts/checkPlayerAssignments.js
+## 🎮 Usage
+
+### Getting Started
+
+1. **Register/Login**: Create an account or log in to access the platform
+2. **Choose Club**: Select your preferred football club
+3. **Explore Features**:
+   - **My Club**: Manage your squad and budget
+   - **Players**: Browse the complete player database
+   - **Transfer Market**: Participate in live auctions
+   - **Player Form**: Analyze player performance and form
+
+### Key Features
+
+#### Live Auctions
+- Real-time bidding with countdown timers
+- Buy Now functionality for immediate purchases
+- AI competition with intelligent bidding strategies
+- Comprehensive bid history and analytics
+
+#### Player Form Analysis
+- Performance ratings (70-100 scale)
+- Recent match statistics
+- Form trend visualization
+- Filtering and sorting options
+
+#### Club Management
+- Squad overview with detailed player information
+- Budget tracking and management
+- Transfer history and analytics
+- Player selling functionality
+
+## 🏗️ Architecture
+
+### Backend Architecture
+
+```
+backend/
+├── controllers/     # Business logic layer
+├── models/         # Data models and schemas
+├── routes/         # API endpoints
+├── scripts/        # Utility and maintenance scripts
+├── middleware/     # Custom middleware
+└── utils/          # Helper functions and utilities
 ```
 
-### Speler Toewijzingen Repareren
-```bash
-cd backend
-node scripts/fixPlayerAssignments.js
+### Frontend Architecture
+
+```
+frontend/src/
+├── components/     # Reusable UI components
+├── pages/         # Page-level components
+├── hooks/         # Custom React hooks
+├── utils/         # Helper functions
+├── styles/        # CSS and styling
+└── services/      # API service layer
 ```
 
-### Auto-Bidder Herstarten
-```bash
-cd backend
-node scripts/restartAutoBidder.js
+### Design Patterns
+
+- **MVC Pattern**: Separation of concerns in backend
+- **Repository Pattern**: Data access abstraction
+- **Factory Pattern**: Object creation for complex entities
+- **Observer Pattern**: Real-time updates and notifications
+- **Strategy Pattern**: AI bidding algorithms
+
+### SOLID Principles Implementation
+
+- **Single Responsibility**: Each class/module has one purpose
+- **Open/Closed**: Extensible without modification
+- **Liskov Substitution**: Interchangeable implementations
+- **Interface Segregation**: Focused, specific interfaces
+- **Dependency Inversion**: High-level modules independent of low-level
+
+## 📚 API Documentation
+
+### Authentication Endpoints
+
+```http
+POST /api/auth/register
+POST /api/auth/login
 ```
 
-### Club Spelers Bekijken
-```bash
-curl http://localhost:3000/api/clubs/{clubId}/players
+### Club Management
+
+```http
+GET /api/clubs
+GET /api/clubs/:id
+GET /api/clubs/:id/players
+PUT /api/clubs/:id
 ```
 
-### Stuck Auctions Opschonen
-```bash
-cd backend
-node scripts/restartAutoBidder.js
+### Auction System
+
+```http
+GET /api/auctions
+POST /api/auctions
+POST /api/auctions/:id/bid
+POST /api/auctions/:id/buy-now
+POST /api/auctions/:id/process
 ```
 
-## 🎮 Gebruik
+### Player Management
 
-1. **Registreer** een account en kies een club
-2. **Bekijk** de transfermarkt voor live auctions
-3. **Bied** op spelers of gebruik "Buy Now"
-4. **Beheer** je club en bekijk je spelers
-5. **Run** daily simulations voor nieuwe auctions
-
-## 🔄 API Endpoints
-
-### Auctions
-- `GET /api/auctions` - Alle actieve auctions
-- `POST /api/auctions/:id/bid` - Plaats een bod
-- `POST /api/auctions/:id/buy-now` - Koop direct
-- `POST /api/auctions/:id/process` - Verwerk beëindigde auction
-
-### Clubs
-- `GET /api/clubs` - Alle clubs
-- `GET /api/clubs/:id` - Specifieke club
-- `GET /api/clubs/:id/players` - Club spelers
-- `PUT /api/clubs/:id` - Update club
+```http
+GET /api/players
+GET /api/players/:id
+```
 
 ### Simulation
-- `POST /api/simulation/transfer` - Simuleer enkele transfer
-- `POST /api/simulation/day` - Dagelijkse simulatie
 
-## 🐛 Bekende Problemen & Oplossingen
+```http
+POST /api/simulation/transfer
+POST /api/simulation/day
+```
 
-### Probleem: Speler wordt niet toegevoegd na aankoop
-**Oplossing**: Gebruik de debug scripts om speler toewijzingen te controleren en repareren.
+## 🔧 Development
 
-### Probleem: Live auctions stoppen abrupt
-**Oplossing**: Verbeterde error handling en atomic operations geïmplementeerd.
+### Code Style
 
-### Probleem: Budget wordt niet correct bijgewerkt
-**Oplossing**: MongoDB transactions gebruikt voor consistente budget updates.
+- **ESLint**: JavaScript/TypeScript linting
+- **Prettier**: Code formatting
+- **Conventional Commits**: Standardized commit messages
 
-## 🔍 Troubleshooting
+### Git Workflow
 
-1. **Spelers verdwijnen**: Run `fixPlayerAssignments.js`
-2. **Auctions stoppen**: Check server logs voor errors
-3. **Budget problemen**: Refresh de pagina en check club data
-4. **AI biedt niet**: Check of autoBidder script draait
+1. **Feature Branches**: `feature/description`
+2. **Bug Fixes**: `fix/description`
+3. **Documentation**: `docs/description`
+4. **Refactoring**: `refactor/description`
 
-## 📊 Technische Details
+### Commit Message Format
 
-- **Backend**: Node.js + Express + MongoDB
-- **Frontend**: React + Axios
-- **Database**: MongoDB met Mongoose ODM
-- **Real-time**: Polling elke 10 seconden voor live updates
-- **Transactions**: MongoDB sessions voor data consistency
+```
+type(scope): description
+
+[optional body]
+
+[optional footer]
+```
+
+Examples:
+- `feat(auth): add JWT token validation`
+- `fix(auctions): resolve race condition in bidding`
+- `docs(readme): update installation instructions`
+
+### Testing
+
+```bash
+# Backend tests
+cd backend
+npm test
+
+# Frontend tests
+cd frontend
+npm test
+```
+
+## 🐛 Debugging
+
+### Common Issues
+
+1. **MongoDB Connection**: Ensure MongoDB is running
+2. **Port Conflicts**: Check if ports 3000/3001 are available
+3. **CORS Issues**: Verify backend CORS configuration
+
+### Debug Scripts
+
+```bash
+# Check player assignments
+node backend/scripts/checkPlayerAssignments.js
+
+# Fix player assignments
+node backend/scripts/fixPlayerAssignments.js
+
+# Restart auto-bidder
+node backend/scripts/restartAutoBidder.js
+```
+
+## 🤝 Contributing
+
+### Development Setup
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes following the coding standards
+4. Commit your changes: `git commit -m 'feat: add amazing feature'`
+5. Push to the branch: `git push origin feature/amazing-feature`
+6. Open a Pull Request
+
+### Code Standards
+
+- Follow ESLint configuration
+- Write meaningful commit messages
+- Add tests for new features
+- Update documentation as needed
+- Follow the established design patterns
+
+## 📊 Performance
+
+### Optimization Techniques
+
+- **Database Indexing**: Optimized queries with proper indexes
+- **Caching**: Redis-like caching for frequently accessed data
+- **Lazy Loading**: Component-level code splitting
+- **Image Optimization**: Compressed assets and lazy loading
+- **Bundle Optimization**: Tree shaking and code splitting
+
+### Monitoring
+
+- **Error Tracking**: Comprehensive error logging
+- **Performance Metrics**: Response time monitoring
+- **User Analytics**: Usage pattern analysis
+
+## 🔒 Security
+
+### Implemented Measures
+
+- **JWT Authentication**: Secure token-based authentication
+- **Input Validation**: Comprehensive data validation
+- **SQL Injection Prevention**: Parameterized queries
+- **CORS Configuration**: Proper cross-origin settings
+- **Rate Limiting**: API request throttling
+
+## 📈 Roadmap
+
+### Planned Features
+
+- [ ] Real-time WebSocket implementation
+- [ ] Advanced AI bidding algorithms
+- [ ] Player injury simulation
+- [ ] League table integration
+- [ ] Mobile app development
+- [ ] Multi-language support
+
+### Technical Improvements
+
+- [ ] TypeScript migration
+- [ ] GraphQL API implementation
+- [ ] Microservices architecture
+- [ ] Docker containerization
+- [ ] CI/CD pipeline setup
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **React Team**: For the amazing frontend framework
+- **Node.js Community**: For the robust backend runtime
+- **MongoDB**: For the flexible database solution
+- **Open Source Contributors**: For inspiration and best practices
+
+## 📞 Support
+
+For support and questions:
+
+- **Issues**: [GitHub Issues](https://github.com/EHB-MCT/remedial-assignment-KobeBerckmans/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/EHB-MCT/remedial-assignment-KobeBerckmans/discussions)
+- **Email**: kobe.berckmans@student.ehb.be
+
+---
+
+**Made with ❤️ by Kobe Berckmans**
