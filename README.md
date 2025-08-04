@@ -350,5 +350,5 @@ For support and questions:
 
 ---
 
-**Made with ❤️ by Kobe Berckmans**
+**Made with by Kobe Berckmans**
 
