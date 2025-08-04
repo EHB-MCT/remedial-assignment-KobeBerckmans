@@ -1,9 +1,31 @@
+/**
+ * Auction Routes
+ * 
+ * This module handles all auction-related API endpoints including:
+ * - Creating new auctions
+ * - Placing bids
+ * - Buy now functionality
+ * - Processing ended auctions
+ * - Auction status management
+ * 
+ * @author Kobe Berckmans
+ * @version 1.0.0
+ * @license MIT
+ */
+
 const express = require('express');
 const router = express.Router();
 const Auction = require('../models/Auction');
 const Club = require('../models/Club');
 
-// GET all active auctions
+/**
+ * GET /api/auctions
+ * Retrieves all active auctions with populated club and bidder information
+ * 
+ * @route GET /api/auctions
+ * @returns {Array} Array of active auction objects
+ * @throws {500} Internal server error
+ */
 router.get('/', async (req, res) => {
   try {
     const auctions = await Auction.find({ status: 'active' })
@@ -31,7 +53,16 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET single auction
+/**
+ * GET /api/auctions/:id
+ * Retrieves a specific auction by ID with populated club and bidder information
+ * 
+ * @route GET /api/auctions/:id
+ * @param {string} id - Auction ID
+ * @returns {Object} Auction object with populated references
+ * @throws {404} Auction not found
+ * @throws {500} Internal server error
+ */
 router.get('/:id', async (req, res) => {
   try {
     const auction = await Auction.findById(req.params.id)
@@ -48,7 +79,23 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST create new auction
+/**
+ * POST /api/auctions
+ * Creates a new auction for a player
+ * 
+ * @route POST /api/auctions
+ * @param {string} playerId - Player's unique identifier
+ * @param {string} playerName - Player's name
+ * @param {string} currentClubId - ID of the club selling the player
+ * @param {number} startingPrice - Initial auction price
+ * @param {number} buyNowPrice - Price for immediate purchase
+ * @param {number} durationHours - Auction duration in hours (default: 24)
+ * @returns {Object} Created auction object
+ * @throws {404} Club not found
+ * @throws {400} Player already listed for sale
+ * @throws {400} Invalid request data
+ * @throws {500} Internal server error
+ */
 router.post('/', async (req, res) => {
   try {
     const { playerId, playerName, currentClubId, startingPrice, buyNowPrice, durationHours = 24 } = req.body;
@@ -86,7 +133,7 @@ router.post('/', async (req, res) => {
       .populate('currentClub')
       .populate('highestBidder');
 
-    console.log(`✅ Created auction for ${playerName} from ${currentClub.name}`);
+    console.log(`Created auction for ${playerName} from ${currentClub.name}`);
 
     res.status(201).json(populatedAuction);
   } catch (err) {
@@ -95,7 +142,19 @@ router.post('/', async (req, res) => {
   }
 });
 
-// POST place bid
+/**
+ * POST /api/auctions/:id/bid
+ * Places a bid on an active auction
+ * 
+ * @route POST /api/auctions/:id/bid
+ * @param {string} id - Auction ID
+ * @param {string} clubId - ID of the club placing the bid
+ * @param {number} amount - Bid amount
+ * @returns {Object} Updated auction object
+ * @throws {404} Auction not found
+ * @throws {400} Invalid bid amount or auction status
+ * @throws {500} Internal server error
+ */
 router.post('/:id/bid', async (req, res) => {
   try {
     const { clubId, amount } = req.body;
@@ -192,7 +251,18 @@ router.post('/:id/bid', async (req, res) => {
   }
 });
 
-// POST buy now
+/**
+ * POST /api/auctions/:id/buy-now
+ * Allows a club to purchase a player immediately for a fixed price
+ * 
+ * @route POST /api/auctions/:id/buy-now
+ * @param {string} id - Auction ID
+ * @param {string} clubId - ID of the club purchasing the player
+ * @returns {Object} Updated auction and club data
+ * @throws {404} Auction not found
+ * @throws {400} Insufficient budget or auction status
+ * @throws {500} Internal server error
+ */
 router.post('/:id/buy-now', async (req, res) => {
   try {
     const { clubId } = req.body;
@@ -329,7 +399,16 @@ router.post('/:id/buy-now', async (req, res) => {
   }
 });
 
-// GET check auction status (for timer updates)
+/**
+ * GET /api/auctions/:id/status
+ * Retrieves the current status of an auction, including if it has ended and time left.
+ * 
+ * @route GET /api/auctions/:id/status
+ * @param {string} id - Auction ID
+ * @returns {Object} Auction status and time information
+ * @throws {404} Auction not found
+ * @throws {500} Internal server error
+ */
 router.get('/:id/status', async (req, res) => {
   try {
     const auction = await Auction.findById(req.params.id);
@@ -352,7 +431,17 @@ router.get('/:id/status', async (req, res) => {
   }
 });
 
-// POST process ended auction
+/**
+ * POST /api/auctions/:id/process
+ * Processes an auction that has ended, transferring the player to the highest bidder.
+ * 
+ * @route POST /api/auctions/:id/process
+ * @param {string} id - Auction ID
+ * @returns {Object} Success message
+ * @throws {404} Auction not found
+ * @throws {400} Auction not active for processing
+ * @throws {500} Internal server error
+ */
 router.post('/:id/process', async (req, res) => {
   try {
     const auction = await Auction.findById(req.params.id);
