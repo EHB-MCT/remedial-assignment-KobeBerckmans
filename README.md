@@ -71,7 +71,7 @@ npm install
 npm start
 ```
 
-The application will be available at `http://localhost:3000`
+The application will be available at `http://localhost:3001` (frontend) and `http://localhost:3000` (backend API)
 
 ## Usage
 
@@ -339,7 +339,16 @@ For support and questions:
 - **Discussions**: [GitHub Discussions](https://github.com/EHB-MCT/remedial-assignment-KobeBerckmans/discussions)
 - **Email**: kobe.berckmans@student.ehb.be
 
+## Technology Stack
+
+- **Frontend**: React 18, React Router, Axios
+- **Backend**: Node.js, Express.js, MongoDB
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT tokens
+- **Real-time**: Polling-based live updates
+- **Styling**: CSS3 with responsive design
+
 ---
 
-**Made with by Kobe Berckmans**
+**Made with ❤️ by Kobe Berckmans**
 
