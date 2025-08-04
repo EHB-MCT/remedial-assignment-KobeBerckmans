@@ -1,8 +1,30 @@
+/**
+ * Transfer Market Component
+ * 
+ * This component handles the live auction system for the transfer market.
+ * It provides real-time bidding, buy-now functionality, and auction management.
+ * 
+ * @author Kobe Berckmans
+ * @version 1.0.0
+ * @license MIT
+ */
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './TransferMarket.css';
 
+/**
+ * Transfer Market Component
+ * Manages live auctions, bidding, and buy-now functionality
+ * 
+ * @param {Object} props - Component props
+ * @param {Object} props.user - Current user object
+ * @param {Object} props.club - Current club object
+ * @param {Function} props.onClubUpdate - Callback function for club updates
+ * @returns {JSX.Element} Transfer market component
+ */
 function TransferMarket({ user, club, onClubUpdate }) {
+  // State management for auctions and bidding
   const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAuction, setSelectedAuction] = useState(null);
@@ -12,17 +34,21 @@ function TransferMarket({ user, club, onClubUpdate }) {
   const [refreshInterval, setRefreshInterval] = useState(null);
   const [timerInterval, setTimerInterval] = useState(null);
 
+  /**
+   * Effect hook to initialize component and set up real-time updates
+   * Fetches auctions and sets up intervals for live updates
+   */
   useEffect(() => {
     if (club) {
       setUserClub(club);
       fetchAuctions();
     }
     
-    // Set up real-time updates every 10 seconds for live bidding (slower to prevent race conditions)
+    // Set up real-time updates every 10 seconds for live bidding
     const interval = setInterval(fetchAuctions, 10000);
     setRefreshInterval(interval);
 
-    // Set up live countdown timer every 5 seconds (slower to prevent conflicts)
+    // Set up live countdown timer every 5 seconds
     const timer = setInterval(() => {
       setAuctions(prevAuctions => 
         prevAuctions.map(auction => ({
@@ -33,12 +59,19 @@ function TransferMarket({ user, club, onClubUpdate }) {
     }, 5000);
     setTimerInterval(timer);
 
+    // Cleanup intervals on component unmount
     return () => {
       if (interval) clearInterval(interval);
       if (timer) clearInterval(timer);
     };
   }, [club]);
 
+  /**
+   * Calculates the time remaining until auction ends
+   * 
+   * @param {string} endTime - Auction end time as ISO string
+   * @returns {number} Time remaining in milliseconds
+   */
   const calculateTimeLeft = (endTime) => {
     const now = new Date();
     const end = new Date(endTime);
@@ -46,13 +79,17 @@ function TransferMarket({ user, club, onClubUpdate }) {
     return Math.max(0, timeLeft);
   };
 
+  /**
+   * Fetches all active auctions from the API
+   * Updates the auctions state with current auction data
+   */
   const fetchAuctions = async () => {
     try {
-      console.log('🔄 Fetching auctions...');
+      console.log('Fetching auctions...');
       const response = await axios.get('http://localhost:3000/api/auctions');
       const auctions = response.data;
       
-      console.log(`📋 Found ${auctions.length} auctions:`, auctions.map(a => `${a.playerName} (${a.status})`));
+      console.log(`Found ${auctions.length} auctions:`, auctions.map(a => `${a.playerName} (${a.status})`));
       
       // Add timeLeft to each auction
       const auctionsWithTime = auctions.map(auction => ({
@@ -63,15 +100,20 @@ function TransferMarket({ user, club, onClubUpdate }) {
       // Only show active auctions to prevent confusion
       const activeAuctions = auctionsWithTime.filter(auction => auction.status === 'active');
       
-      console.log(`📊 Setting ${activeAuctions.length} active auctions to state`);
+      console.log(`Setting ${activeAuctions.length} active auctions to state`);
       setAuctions(activeAuctions);
       setLoading(false);
     } catch (error) {
-      console.error('❌ Failed to fetch auctions:', error);
+      console.error('Failed to fetch auctions:', error);
       setLoading(false);
     }
   };
 
+  /**
+   * Places a bid on an active auction
+   * 
+   * @param {string} auctionId - ID of the auction to bid on
+   */
   const placeBid = async (auctionId) => {
     if (!userClub || !bidAmount) {
       setMessage('Please enter a valid bid amount');
@@ -84,15 +126,20 @@ function TransferMarket({ user, club, onClubUpdate }) {
         amount: parseInt(bidAmount)
       });
       
-      setMessage('✅ Bid placed successfully!');
+      setMessage('Bid placed successfully!');
       setBidAmount('');
       fetchAuctions(); // Immediate refresh
     } catch (error) {
       console.error('Bid error:', error.response?.data);
-      setMessage(`❌ ${error.response?.data?.message || 'Failed to place bid'}`);
+      setMessage(`${error.response?.data?.message || 'Failed to place bid'}`);
     }
   };
 
+  /**
+   * Executes a buy-now purchase for an auction
+   * 
+   * @param {string} auctionId - ID of the auction to buy
+   */
   const buyNow = async (auctionId) => {
     if (!userClub) {
       setMessage('No club selected');
@@ -100,68 +147,58 @@ function TransferMarket({ user, club, onClubUpdate }) {
     }
 
     try {
-      console.log('Attempting buy now for auction:', auctionId);
-      console.log('User club budget:', userClub.budget);
-      
       const response = await axios.post(`http://localhost:3000/api/auctions/${auctionId}/buy-now`, {
         clubId: userClub._id
       });
       
-      console.log('Buy now response:', response.data);
-      
-      // Show the special buy now message from the server
-      if (response.data.buyNowMessage) {
-        setMessage(response.data.buyNowMessage);
-      } else {
-        // Fallback message
-        const auction = auctions.find(a => a._id === auctionId);
-        if (auction) {
-          setMessage(`💎 ${userClub.name} used BUY NOW to purchase ${auction.playerName} for ${formatAmount(auction.buyNowPrice)}!`);
-        } else {
-          setMessage('✅ Player purchased successfully with BUY NOW!');
-        }
-      }
+      setMessage('Player purchased successfully!');
       
       // Update club data if provided in response
-      if (response.data.updatedClub && onClubUpdate) {
+      if (response.data.updatedClub) {
+        setUserClub(response.data.updatedClub);
         onClubUpdate(response.data.updatedClub);
+      } else {
+        // Fetch updated club data
+        const clubResponse = await axios.get(`http://localhost:3000/api/clubs/${userClub._id}`);
+        setUserClub(clubResponse.data);
+        onClubUpdate(clubResponse.data);
       }
       
-      // Refresh auctions and club data
-      fetchAuctions();
-      
-      // Update club data if onClubUpdate is available and not already updated
-      if (onClubUpdate && !response.data.updatedClub) {
-        try {
-          const clubResponse = await axios.get(`http://localhost:3000/api/clubs/${userClub._id}`);
-          onClubUpdate(clubResponse.data);
-        } catch (clubError) {
-          console.error('Failed to refresh club data after purchase:', clubError);
-        }
-      }
+      fetchAuctions(); // Refresh auctions
     } catch (error) {
-      console.error('Buy now error:', error);
-      console.error('Error response:', error.response?.data);
-      setMessage(`❌ ${error.response?.data?.message || 'Failed to purchase player'}`);
-      
-      // Refresh auctions to get latest status
-      fetchAuctions();
+      console.error('Buy now error:', error.response?.data);
+      setMessage(`${error.response?.data?.message || 'Failed to purchase player'}`);
     }
   };
 
+  /**
+   * Formats time remaining into a human-readable string
+   * 
+   * @param {number} timeLeft - Time remaining in milliseconds
+   * @returns {string} Formatted time string
+   */
   const formatTimeLeft = (timeLeft) => {
     if (timeLeft <= 0) return 'Ended';
-
-    const minutes = Math.floor(timeLeft / (1000 * 60));
+    
+    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-    if (minutes > 0) {
-      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
     } else {
       return `${seconds}s`;
     }
   };
 
+  /**
+   * Formats currency amounts for display
+   * 
+   * @param {number} amount - Amount to format
+   * @returns {string} Formatted currency string
+   */
   const formatAmount = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -171,136 +208,87 @@ function TransferMarket({ user, club, onClubUpdate }) {
     }).format(amount);
   };
 
+  /**
+   * Determines the color class for time remaining display
+   * 
+   * @param {number} timeLeft - Time remaining in milliseconds
+   * @returns {string} CSS class name for color
+   */
   const getTimeLeftColor = (timeLeft) => {
-    if (timeLeft <= 0) return 'ended';
-    if (timeLeft <= 60000) return 'urgent'; // Less than 1 minute
-    if (timeLeft <= 300000) return 'warning'; // Less than 5 minutes
-    return 'normal';
+    if (timeLeft <= 0) return 'time-ended';
+    if (timeLeft < 60000) return 'time-critical'; // Less than 1 minute
+    if (timeLeft < 300000) return 'time-warning'; // Less than 5 minutes
+    return 'time-normal';
   };
 
+  // Show loading state while fetching data
   if (loading) {
-    return <div className="transfer-market-loading">Loading transfer market...</div>;
+    return <div className="loading">Loading auctions...</div>;
   }
 
   return (
     <div className="transfer-market">
-      <div className="transfer-market-header">
-        <h2>Transfer Market</h2>
-        {userClub && (
-          <div className="user-club-info">
-            <span>Your Club: {userClub.name}</span>
-            <span>Budget: {formatAmount(userClub.budget)}</span>
-          </div>
-        )}
+      <div className="market-header">
+        <h2>Live Auctions</h2>
+        <p>Bid on players or use Buy Now for immediate purchase</p>
+        {message && <div className="message">{message}</div>}
       </div>
 
-      {message && (
-        <div className={`message ${message.includes('✅') ? 'success' : 'error'}`}>
-          {message}
+      {auctions.length === 0 ? (
+        <div className="no-auctions">
+          <p>No active auctions at the moment.</p>
+          <p>Check back later for new player listings!</p>
         </div>
-      )}
-
-      <div className="auctions-grid">
-        {auctions.length === 0 ? (
-          <div className="no-auctions">
-            <p>No active auctions. Run a daily simulation to create new auctions!</p>
-          </div>
-        ) : (
-          auctions.map(auction => (
+      ) : (
+        <div className="auctions-grid">
+          {auctions.map((auction) => (
             <div key={auction._id} className="auction-card">
               <div className="auction-header">
-                <div className="player-info">
-                  <h3>{auction.playerName}</h3>
-                  <p>Current Club: {auction.currentClub?.name}</p>
-                </div>
-                <div className="auction-status">
-                  <span className={`status ${auction.status}`}>
-                    {auction.status.toUpperCase()}
-                  </span>
-                </div>
+                <h3>{auction.playerName}</h3>
+                <span className={`time-left ${getTimeLeftColor(auction.timeLeft)}`}>
+                  {formatTimeLeft(auction.timeLeft)}
+                </span>
               </div>
-
+              
               <div className="auction-details">
-                <div className="price-info">
-                  <div className="current-bid">
-                    <span>Current Bid:</span>
-                    <strong>{formatAmount(auction.currentPrice)}</strong>
-                  </div>
-                  <div className="buy-now">
-                    <span>Buy Now:</span>
-                    <strong>{formatAmount(auction.buyNowPrice)}</strong>
-                  </div>
-                </div>
-
-                <div className="time-left">
-                  <span>Time Left:</span>
-                  <strong className={`time-${getTimeLeftColor(auction.timeLeft)}`}>
-                    {formatTimeLeft(auction.timeLeft)}
-                  </strong>
-                </div>
-
+                <p><strong>Current Bid:</strong> {formatAmount(auction.currentPrice)}</p>
+                <p><strong>Buy Now:</strong> {formatAmount(auction.buyNowPrice)}</p>
+                <p><strong>Seller:</strong> {auction.currentClub?.name || 'Unknown'}</p>
                 {auction.highestBidder && (
-                  <div className="highest-bidder">
-                    <span>Highest Bidder:</span>
-                    <strong>{auction.highestBidder.name}</strong>
-                  </div>
+                  <p><strong>Highest Bidder:</strong> {auction.highestBidder.name}</p>
                 )}
               </div>
 
-              {auction.status === 'active' && userClub && (
-                <div className="auction-actions">
-                  <div className="bid-section">
-                    <input
-                      type="number"
-                      placeholder={`Min bid: ${formatAmount(auction.currentPrice + 1000000)}`}
-                      value={bidAmount}
-                      onChange={(e) => setBidAmount(e.target.value)}
-                      min={auction.currentPrice + 1000000}
-                      step={1000000}
-                    />
-                    <button 
-                      onClick={() => placeBid(auction._id)}
-                      disabled={!bidAmount || parseInt(bidAmount) <= auction.currentPrice}
-                      className="bid-btn"
-                    >
-                      Place Bid
-                    </button>
-                  </div>
-                  
+              <div className="auction-actions">
+                <div className="bid-section">
+                  <input
+                    type="number"
+                    placeholder="Enter bid amount"
+                    value={bidAmount}
+                    onChange={(e) => setBidAmount(e.target.value)}
+                    min={auction.currentPrice + 1000000}
+                    step={1000000}
+                  />
                   <button 
-                    onClick={() => buyNow(auction._id)}
-                    disabled={userClub.budget < auction.buyNowPrice}
-                    className="buy-now-btn"
-                    title={`Your budget: ${formatAmount(userClub.budget)} | Buy now price: ${formatAmount(auction.buyNowPrice)}`}
+                    onClick={() => placeBid(auction._id)}
+                    disabled={!bidAmount || parseInt(bidAmount) <= auction.currentPrice}
                   >
-                    Buy Now
+                    Place Bid
                   </button>
                 </div>
-              )}
-
-              {auction.bids.length > 0 && (
-                <div className="bid-history">
-                  <h4>🔴 Live Bid History</h4>
-                  <div className="bids-list">
-                    {auction.bids.slice(-5).reverse().map((bid, index) => (
-                      <div key={index} className={`bid-item ${index === 0 ? 'latest-bid' : ''}`}>
-                        <span className="bidder-name">{bid.club.name}</span>
-                        <span className="bid-amount">{formatAmount(bid.amount)}</span>
-                        <span className="bid-time">{new Date(bid.timestamp).toLocaleTimeString()}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {auction.bids.length > 5 && (
-                    <div className="more-bids">
-                      <small>... and {auction.bids.length - 5} more bids</small>
-                    </div>
-                  )}
-                </div>
-              )}
+                
+                <button 
+                  className="buy-now-btn"
+                  onClick={() => buyNow(auction._id)}
+                  disabled={!userClub || userClub.budget < auction.buyNowPrice}
+                >
+                  Buy Now ({formatAmount(auction.buyNowPrice)})
+                </button>
+              </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,3 +1,17 @@
+/**
+ * Football Transfer Market Simulation - Main Application Component
+ * 
+ * This is the main React application component that handles:
+ * - Application routing and navigation
+ * - User authentication state management
+ * - Club data management
+ * - Global state and context
+ * 
+ * @author Kobe Berckmans
+ * @version 1.0.0
+ * @license MIT
+ */
+
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import PlayerList from './components/PlayerList';
@@ -12,6 +26,15 @@ import PlayerForm from './components/PlayerForm';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
 
+/**
+ * Home Component
+ * Displays the main homepage with club statistics and feature overview
+ * 
+ * @param {Object} props - Component props
+ * @param {Object} props.user - Current user object
+ * @param {Object} props.club - Current club object
+ * @returns {JSX.Element} Homepage component
+ */
 function Home({ user, club }) {
   return (
     <main className="app-main">
@@ -43,24 +66,24 @@ function Home({ user, club }) {
 
       <div className="homepage-container">
         <section className="homepage-section myclub-section">
-          <h2>🏆 My Club</h2>
+          <h2>My Club</h2>
           <p>View your current squad, manage your players, and track your club's performance. Build your dream team and compete in the transfer market.</p>
           <p>Your club: <strong>{club?.name || 'Loading...'}</strong></p>
         </section>
 
         <section className="homepage-section players-section">
-          <h2>👥 Players</h2>
+          <h2>Players</h2>
           <p>Browse through the complete database of available players. Scout talent, analyze statistics, and find the perfect additions to your squad.</p>
           <PlayerList limit={4} compact={true} />
         </section>
 
         <section className="homepage-section transfers-section">
-          <h2>💰 Transfer Market</h2>
+          <h2>Transfer Market</h2>
           <p>Participate in live auctions, place bids on players, and negotiate transfers. The market is dynamic with real-time updates and competitive bidding.</p>
         </section>
 
         <section className="homepage-section player-form-section">
-          <h2>📊 Player Form</h2>
+          <h2>Player Form</h2>
           <p>Track player performance, recent form, and match ratings. Analyze which players are in top form and make informed transfer decisions.</p>
         </section>
       </div>
@@ -68,6 +91,12 @@ function Home({ user, club }) {
   );
 }
 
+/**
+ * Players Page Component
+ * Displays all available players in a grid layout
+ * 
+ * @returns {JSX.Element} Players page component
+ */
 function PlayersPage() {
   return (
     <main className="app-main">
@@ -79,6 +108,16 @@ function PlayersPage() {
   );
 }
 
+/**
+ * My Club Page Component
+ * Displays detailed club management interface
+ * 
+ * @param {Object} props - Component props
+ * @param {Object} props.user - Current user object
+ * @param {Object} props.club - Current club object
+ * @param {Function} props.onClubUpdate - Callback function for club updates
+ * @returns {JSX.Element} My club page component
+ */
 function MyClubPage({ user, club, onClubUpdate }) {
   return (
     <main className="app-main">
@@ -90,6 +129,16 @@ function MyClubPage({ user, club, onClubUpdate }) {
   );
 }
 
+/**
+ * Transfers Page Component
+ * Displays transfer market and simulation interface
+ * 
+ * @param {Object} props - Component props
+ * @param {Object} props.user - Current user object
+ * @param {Object} props.club - Current club object
+ * @param {Function} props.onClubUpdate - Callback function for club updates
+ * @returns {JSX.Element} Transfers page component
+ */
 function TransfersPage({ user, club, onClubUpdate }) {
   return (
     <main className="app-main">
@@ -102,115 +151,186 @@ function TransfersPage({ user, club, onClubUpdate }) {
   );
 }
 
+/**
+ * Player Form Page Component
+ * Displays player performance and form analysis
+ * 
+ * @param {Object} props - Component props
+ * @param {Object} props.user - Current user object
+ * @param {Object} props.club - Current club object
+ * @returns {JSX.Element} Player form page component
+ */
 function PlayerFormPage({ user, club }) {
   return (
     <main className="app-main">
       <section id="player-form">
+        <h2>Player Form</h2>
         <PlayerForm user={user} club={club} />
       </section>
     </main>
   );
 }
 
+/**
+ * Main App Component
+ * Handles application state, routing, and authentication
+ * 
+ * @returns {JSX.Element} Main application component
+ */
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showLogin, setShowLogin] = useState(true);
+  // State management for user authentication and club data
   const [user, setUser] = useState(null);
   const [club, setClub] = useState(null);
+  const [showRegister, setShowRegister] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  /**
+   * Effect hook to check authentication status on component mount
+   * Retrieves stored token and validates user session
+   */
   useEffect(() => {
-    // Check if user is already logged in
     const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    const savedClub = localStorage.getItem('club');
-
-    if (token && savedUser && savedClub) {
-      setUser(JSON.parse(savedUser));
-      setClub(JSON.parse(savedClub));
-      setIsAuthenticated(true);
-      
-      // Set default authorization header
+    if (token) {
+      // Set default authorization header for all requests
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // Verify token and fetch user data
+      axios.post('http://localhost:3000/api/auth/verify', { token })
+        .then(response => {
+          setUser(response.data.user);
+          fetchUserClub(response.data.user.id);
+        })
+        .catch(error => {
+          console.error('Token verification failed:', error);
+          localStorage.removeItem('token');
+          delete axios.defaults.headers.common['Authorization'];
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      setIsLoading(false);
     }
   }, []);
 
+  /**
+   * Fetches club data for the authenticated user
+   * 
+   * @param {string} userId - User ID to fetch club for
+   */
+  const fetchUserClub = async (userId) => {
+    try {
+      const response = await axios.get(`http://localhost:3000/api/clubs/${userId}`);
+      setClub(response.data);
+    } catch (error) {
+      console.error('Error fetching user club:', error);
+    }
+  };
+
+  /**
+   * Handles user login and sets up authentication
+   * 
+   * @param {Object} data - Login response data containing user and token
+   */
   const handleLogin = (data) => {
     setUser(data.user);
-    setClub(data.club);
-    setIsAuthenticated(true);
+    localStorage.setItem('token', data.token);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+    fetchUserClub(data.user.id);
   };
 
+  /**
+   * Handles user registration and automatic login
+   * 
+   * @param {Object} data - Registration response data containing user and token
+   */
   const handleRegister = (data) => {
     setUser(data.user);
-    setClub(data.club);
-    setIsAuthenticated(true);
+    localStorage.setItem('token', data.token);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+    fetchUserClub(data.user.id);
   };
 
+  /**
+   * Handles user logout and clears authentication data
+   */
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('club');
-    delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     setClub(null);
-    setIsAuthenticated(false);
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
   };
 
+  /**
+   * Handles club data updates and refreshes state
+   * 
+   * @param {Object} updatedClub - Updated club data
+   */
   const handleClubUpdate = (updatedClub) => {
     setClub(updatedClub);
-    localStorage.setItem('club', JSON.stringify(updatedClub));
   };
 
+  /**
+   * Switches to registration view
+   */
   const switchToRegister = () => {
-    setShowLogin(false);
+    setShowRegister(true);
   };
 
+  /**
+   * Switches to login view
+   */
   const switchToLogin = () => {
-    setShowLogin(true);
+    setShowRegister(false);
   };
 
-  // If not authenticated, show login/register
-  if (!isAuthenticated) {
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return <div className="loading">Loading...</div>;
+  }
+
+  // Show authentication forms if user is not logged in
+  if (!user) {
     return (
-      <div className="app-container">
-        {showLogin ? (
-          <Login onLogin={handleLogin} onSwitchToRegister={switchToRegister} />
-        ) : (
+      <div className="auth-container">
+        {showRegister ? (
           <Register onRegister={handleRegister} onSwitchToLogin={switchToLogin} />
+        ) : (
+          <Login onLogin={handleLogin} onSwitchToRegister={switchToRegister} />
         )}
       </div>
     );
   }
 
+  // Main application with routing
   return (
     <Router>
-      <div className="app-container">
-        <header className="app-header">
-          <h1><Link to="/" className="app-title-link">TransferMarketSim</Link></h1>
-          <div className="user-info">
-            <span className="welcome-text">Welcome, {user?.username}!</span>
-            <span className="club-name">{club?.name}</span>
+      <div className="App">
+        <nav className="app-nav">
+          <div className="nav-brand">
+            <Link to="/">TransferMarketSim</Link>
+          </div>
+          <div className="nav-links">
+            <Link to="/">Home</Link>
+            <Link to="/players">Players</Link>
+            <Link to="/myclub">My Club</Link>
+            <Link to="/transfers">Transfer Market</Link>
+            <Link to="/player-form">Player Form</Link>
+          </div>
+          <div className="nav-user">
+            <span>Welcome, {user.username}!</span>
             <button onClick={handleLogout} className="logout-btn">Logout</button>
           </div>
-          <nav>
-            <ul className="nav-list">
-              <li><Link to="/myclub">My Club</Link></li>
-              <li><Link to="/players">Players</Link></li>
-              <li><Link to="/transfers">Transfers</Link></li>
-              <li><Link to="/player-form">Player Form</Link></li>
-            </ul>
-          </nav>
-        </header>
+        </nav>
+
         <Routes>
           <Route path="/" element={<Home user={user} club={club} />} />
           <Route path="/players" element={<PlayersPage />} />
           <Route path="/myclub" element={<MyClubPage user={user} club={club} onClubUpdate={handleClubUpdate} />} />
           <Route path="/transfers" element={<TransfersPage user={user} club={club} onClubUpdate={handleClubUpdate} />} />
           <Route path="/player-form" element={<PlayerFormPage user={user} club={club} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        <footer className="app-footer">
-          <p>&copy; {new Date().getFullYear()} TransferMarketSim</p>
-        </footer>
       </div>
     </Router>
   );
