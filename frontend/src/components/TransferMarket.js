@@ -18,11 +18,11 @@ function TransferMarket({ user, club, onClubUpdate }) {
       fetchAuctions();
     }
     
-    // Set up real-time updates every 5 seconds
-    const interval = setInterval(fetchAuctions, 5000);
+    // Set up real-time updates every 10 seconds for live bidding (slower to prevent race conditions)
+    const interval = setInterval(fetchAuctions, 10000);
     setRefreshInterval(interval);
 
-    // Set up live countdown timer every second
+    // Set up live countdown timer every 5 seconds (slower to prevent conflicts)
     const timer = setInterval(() => {
       setAuctions(prevAuctions => 
         prevAuctions.map(auction => ({
@@ -30,7 +30,7 @@ function TransferMarket({ user, club, onClubUpdate }) {
           timeLeft: calculateTimeLeft(auction.endTime)
         }))
       );
-    }, 1000);
+    }, 5000);
     setTimerInterval(timer);
 
     return () => {
@@ -48,8 +48,11 @@ function TransferMarket({ user, club, onClubUpdate }) {
 
   const fetchAuctions = async () => {
     try {
+      console.log('🔄 Fetching auctions...');
       const response = await axios.get('http://localhost:3000/api/auctions');
       const auctions = response.data;
+      
+      console.log(`📋 Found ${auctions.length} auctions:`, auctions.map(a => `${a.playerName} (${a.status})`));
       
       // Add timeLeft to each auction
       const auctionsWithTime = auctions.map(auction => ({
@@ -57,44 +60,14 @@ function TransferMarket({ user, club, onClubUpdate }) {
         timeLeft: calculateTimeLeft(auction.endTime)
       }));
       
-      // Process any ended auctions
-      for (const auction of auctionsWithTime) {
-        if (auction.status === 'active' && auction.timeLeft <= 0) {
-          try {
-            console.log(`Processing ended auction for ${auction.playerName}`);
-            const processResponse = await axios.post(`http://localhost:3000/api/auctions/${auction._id}/process`);
-            console.log('Auction processed:', processResponse.data);
-            
-            // Refresh user club data after processing
-            if (userClub) {
-              try {
-                const clubResponse = await axios.get(`http://localhost:3000/api/clubs/${userClub._id}`);
-                console.log('Updated club data:', clubResponse.data);
-                // Update the club data in the parent component
-                if (typeof onClubUpdate === 'function') {
-                  onClubUpdate(clubResponse.data);
-                }
-              } catch (clubError) {
-                console.error('Failed to refresh club data:', clubError);
-              }
-            }
-          } catch (error) {
-            console.error(`Failed to process auction ${auction._id}:`, error);
-          }
-        }
-      }
+      // Only show active auctions to prevent confusion
+      const activeAuctions = auctionsWithTime.filter(auction => auction.status === 'active');
       
-      // Fetch updated auctions after processing
-      const updatedResponse = await axios.get('http://localhost:3000/api/auctions');
-      const updatedAuctions = updatedResponse.data.map(auction => ({
-        ...auction,
-        timeLeft: calculateTimeLeft(auction.endTime)
-      }));
-      
-      setAuctions(updatedAuctions);
+      console.log(`📊 Setting ${activeAuctions.length} active auctions to state`);
+      setAuctions(activeAuctions);
       setLoading(false);
     } catch (error) {
-      console.error('Failed to fetch auctions:', error);
+      console.error('❌ Failed to fetch auctions:', error);
       setLoading(false);
     }
   };
@@ -115,6 +88,7 @@ function TransferMarket({ user, club, onClubUpdate }) {
       setBidAmount('');
       fetchAuctions(); // Immediate refresh
     } catch (error) {
+      console.error('Bid error:', error.response?.data);
       setMessage(`❌ ${error.response?.data?.message || 'Failed to place bid'}`);
     }
   };
@@ -134,13 +108,30 @@ function TransferMarket({ user, club, onClubUpdate }) {
       });
       
       console.log('Buy now response:', response.data);
-      setMessage('✅ Player purchased successfully!');
+      
+      // Show the special buy now message from the server
+      if (response.data.buyNowMessage) {
+        setMessage(response.data.buyNowMessage);
+      } else {
+        // Fallback message
+        const auction = auctions.find(a => a._id === auctionId);
+        if (auction) {
+          setMessage(`💎 ${userClub.name} used BUY NOW to purchase ${auction.playerName} for ${formatAmount(auction.buyNowPrice)}!`);
+        } else {
+          setMessage('✅ Player purchased successfully with BUY NOW!');
+        }
+      }
+      
+      // Update club data if provided in response
+      if (response.data.updatedClub && onClubUpdate) {
+        onClubUpdate(response.data.updatedClub);
+      }
       
       // Refresh auctions and club data
       fetchAuctions();
       
-      // Update club data if onClubUpdate is available
-      if (onClubUpdate) {
+      // Update club data if onClubUpdate is available and not already updated
+      if (onClubUpdate && !response.data.updatedClub) {
         try {
           const clubResponse = await axios.get(`http://localhost:3000/api/clubs/${userClub._id}`);
           onClubUpdate(clubResponse.data);
@@ -152,6 +143,9 @@ function TransferMarket({ user, club, onClubUpdate }) {
       console.error('Buy now error:', error);
       console.error('Error response:', error.response?.data);
       setMessage(`❌ ${error.response?.data?.message || 'Failed to purchase player'}`);
+      
+      // Refresh auctions to get latest status
+      fetchAuctions();
     }
   };
 
@@ -286,16 +280,21 @@ function TransferMarket({ user, club, onClubUpdate }) {
 
               {auction.bids.length > 0 && (
                 <div className="bid-history">
-                  <h4>Recent Bids</h4>
+                  <h4>🔴 Live Bid History</h4>
                   <div className="bids-list">
-                    {auction.bids.slice(-3).reverse().map((bid, index) => (
-                      <div key={index} className="bid-item">
-                        <span>{bid.club.name}</span>
-                        <span>{formatAmount(bid.amount)}</span>
-                        <span>{new Date(bid.timestamp).toLocaleTimeString()}</span>
+                    {auction.bids.slice(-5).reverse().map((bid, index) => (
+                      <div key={index} className={`bid-item ${index === 0 ? 'latest-bid' : ''}`}>
+                        <span className="bidder-name">{bid.club.name}</span>
+                        <span className="bid-amount">{formatAmount(bid.amount)}</span>
+                        <span className="bid-time">{new Date(bid.timestamp).toLocaleTimeString()}</span>
                       </div>
                     ))}
                   </div>
+                  {auction.bids.length > 5 && (
+                    <div className="more-bids">
+                      <small>... and {auction.bids.length - 5} more bids</small>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

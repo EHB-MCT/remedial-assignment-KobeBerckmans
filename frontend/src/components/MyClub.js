@@ -2,82 +2,132 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './MyClub.css';
 
-function MyClub({ user, club }) {
+function MyClub({ user, club, onClubUpdate }) {
   const [userClub, setUserClub] = useState(null);
   const [clubPlayers, setClubPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [showSellModal, setShowSellModal] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [sellPrice, setSellPrice] = useState('');
+  const [buyNowPrice, setBuyNowPrice] = useState('');
 
   useEffect(() => {
     if (club) {
       fetchUserClub();
     }
-  }, [club]);
+  }, [club, onClubUpdate]);
 
   const fetchUserClub = async () => {
     try {
-      // Use the club passed as prop (user's own club)
-      setUserClub(club);
+      console.log('🔍 Fetching user club data...');
+      console.log('Club prop:', club);
       
-      if (club.playerIds && club.playerIds.length > 0) {
-        console.log('Club has players:', club.playerIds);
+      // Always fetch the most recent club data
+      const clubResponse = await axios.get(`http://localhost:3000/api/clubs/${club._id}`);
+      const currentClub = clubResponse.data;
+      console.log('📊 Current club data:', currentClub);
+      setUserClub(currentClub);
+      
+      if (currentClub.playerIds && currentClub.playerIds.length > 0) {
+        console.log('👥 Club has players:', currentClub.playerIds);
         const playersResponse = await axios.get('http://localhost:3000/api/players');
         const allPlayers = playersResponse.data;
-        const clubPlayerIds = club.playerIds.map(id => id.toString());
-        const players = allPlayers.filter(player => clubPlayerIds.includes(player._id.toString()));
-        console.log('Found club players:', players.length);
+        console.log('📋 Total players in database:', allPlayers.length);
+        
+        const clubPlayerIds = currentClub.playerIds.map(id => id.toString());
+        console.log('🎯 Looking for player IDs:', clubPlayerIds);
+        
+        const players = allPlayers.filter(player => {
+          const playerId = player._id.toString();
+          const isInClub = clubPlayerIds.includes(playerId);
+          if (isInClub) {
+            console.log('✅ Found player in club:', player.name, playerId);
+          }
+          return isInClub;
+        });
+        
+        console.log('🎉 Found club players:', players.length);
+        console.log('📝 Club players:', players.map(p => p.name));
         setClubPlayers(players);
       } else {
-        console.log('Club has no players');
+        console.log('❌ Club has no players');
         setClubPlayers([]);
       }
       setLoading(false);
+      
+      // Update parent component if onClubUpdate is provided
+      if (onClubUpdate && currentClub) {
+        onClubUpdate(currentClub);
+      }
     } catch (error) {
-      console.error('Failed to fetch user club:', error);
+      console.error('❌ Failed to fetch user club:', error);
       setLoading(false);
+      // Retry after a short delay if it's a network error
+      if (error.code === 'ECONNREFUSED' || error.code === 'NETWORK_ERROR') {
+        setTimeout(() => {
+          console.log('🔄 Retrying club fetch...');
+          fetchUserClub();
+        }, 2000);
+      }
     }
   };
 
-  const sellPlayer = async (playerId, playerName) => {
+  const openSellModal = (player) => {
+    console.log('🎯 Opening sell modal for player:', player);
+    setSelectedPlayer(player);
+    
+    // Calculate suggested prices based on player stats
+    const basePrice = 5000000; // 5M base
+    const goalsValue = player.goals * 200000; // 200k per goal
+    const assistsValue = player.assists * 150000; // 150k per assist
+    const appearancesValue = player.appearances * 50000; // 50k per appearance
+    const suggestedPrice = basePrice + goalsValue + assistsValue + appearancesValue;
+    
+    const sellPriceValue = Math.floor(suggestedPrice * 0.8);
+    const buyNowPriceValue = suggestedPrice;
+    
+    console.log('💰 Calculated prices:', { sellPriceValue, buyNowPriceValue });
+    
+    setSellPrice(sellPriceValue.toString());
+    setBuyNowPrice(buyNowPriceValue.toString());
+    setShowSellModal(true);
+    
+    console.log('✅ Modal should be open now');
+  };
+
+  const confirmSell = async () => {
+    console.log('🎯 Confirm sell called');
+    console.log('Selected player:', selectedPlayer);
+    console.log('Sell price:', sellPrice);
+    console.log('Buy now price:', buyNowPrice);
+    console.log('User club:', userClub);
+    
+    if (!selectedPlayer || !sellPrice || !buyNowPrice) {
+      console.log('❌ Missing data for sell');
+      setMessage('❌ Please enter valid prices');
+      return;
+    }
+
     if (!userClub) {
+      console.log('❌ No club found');
       setMessage('❌ No club found');
       return;
     }
 
-    console.log('User club:', userClub);
-    console.log('Club ID:', userClub._id);
-    console.log('Club name:', userClub.name);
-    console.log('Player ID to sell:', playerId);
-
     try {
-      // Calculate sell price based on player stats
-      const player = clubPlayers.find(p => p._id.toString() === playerId);
-      if (!player) {
-        setMessage('❌ Player not found');
-        return;
-      }
-
-      console.log('Found player to sell:', player);
-
-      // Calculate price based on goals, assists, and appearances
-      const basePrice = 5000000; // 5M base
-      const goalsValue = player.goals * 200000; // 200k per goal
-      const assistsValue = player.assists * 150000; // 150k per assist
-      const appearancesValue = player.appearances * 50000; // 50k per appearance
-      const sellPrice = basePrice + goalsValue + assistsValue + appearancesValue;
-
-      console.log('Calculated sell price:', sellPrice);
+      console.log('🚀 Creating auction for:', selectedPlayer.name);
+      console.log('💰 Starting price:', sellPrice);
+      console.log('💎 Buy now price:', buyNowPrice);
 
       // Create auction for the player
       const auctionData = {
-        playerId: playerId,
-        playerName: playerName,
-        currentClub: userClub._id,
-        startingPrice: Math.floor(sellPrice * 0.8), // 80% of calculated value
-        currentPrice: Math.floor(sellPrice * 0.8),
-        buyNowPrice: sellPrice,
-        endTime: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
-        description: `Player available for transfer from ${userClub.name}`
+        playerId: selectedPlayer._id.toString(),
+        playerName: selectedPlayer.name,
+        currentClubId: userClub._id,
+        startingPrice: parseInt(sellPrice),
+        buyNowPrice: parseInt(buyNowPrice),
+        durationHours: 0.0833 // 5 minutes
       };
 
       console.log('Creating auction with data:', auctionData);
@@ -85,36 +135,47 @@ function MyClub({ user, club }) {
       const response = await axios.post('http://localhost:3000/api/auctions', auctionData);
       
       if (response.status === 201) {
-        setMessage(`✅ ${playerName} listed for sale! Starting price: €${Math.floor(sellPrice * 0.8).toLocaleString()}`);
+        setMessage(`✅ ${selectedPlayer.name} listed for sale! Starting price: €${parseInt(sellPrice).toLocaleString()}`);
         
-        // Remove player from club
-        const updatedPlayerIds = userClub.playerIds.filter(id => id !== playerId);
-        console.log('Current playerIds:', userClub.playerIds);
-        console.log('Updated playerIds:', updatedPlayerIds);
-        console.log('Club ID for update:', userClub._id);
-        
+        // Remove player from club and add money immediately
         try {
+          const updatedPlayerIds = userClub.playerIds.filter(id => id !== selectedPlayer._id.toString());
+          const newBudget = userClub.budget + parseInt(sellPrice);
+          
           const updateResponse = await axios.put(`http://localhost:3000/api/clubs/${userClub._id}`, {
-            playerIds: updatedPlayerIds
+            playerIds: updatedPlayerIds,
+            budget: newBudget
           });
 
           console.log('Club update response:', updateResponse.data);
 
-          // Refresh club data
-          fetchUserClub();
+          // Update local state and parent component
+          const updatedClub = { 
+            ...userClub, 
+            playerIds: updatedPlayerIds,
+            budget: newBudget
+          };
+          setUserClub(updatedClub);
+          if (onClubUpdate) {
+            onClubUpdate(updatedClub);
+          }
+          
+          setMessage(`✅ ${selectedPlayer.name} sold for €${parseInt(sellPrice).toLocaleString()}! Money added to budget.`);
         } catch (updateError) {
-          console.error('Error updating club:', updateError);
-          console.error('Update error response:', updateError.response?.data);
+          console.error('Error updating club after sale:', updateError);
           setMessage(`⚠️ Player listed for sale but failed to update club. Please refresh the page.`);
         }
       }
     } catch (error) {
       console.error('Error selling player:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      console.error('Error URL:', error.config?.url);
       setMessage(`❌ ${error.response?.data?.message || 'Failed to sell player'}`);
     }
+
+    // Close modal
+    setShowSellModal(false);
+    setSelectedPlayer(null);
+    setSellPrice('');
+    setBuyNowPrice('');
   };
 
   const formatAmount = (amount) => {
@@ -192,7 +253,7 @@ function MyClub({ user, club }) {
 
               <div className="player-actions">
                 <button 
-                  onClick={() => sellPlayer(player._id.toString(), player.name)}
+                  onClick={() => openSellModal(player)}
                   className="sell-btn"
                 >
                   🏷️ Sell Player
@@ -214,6 +275,50 @@ function MyClub({ user, club }) {
                 <div className="history-date">{new Date(transfer.date).toLocaleDateString()}</div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sell Modal */}
+      {showSellModal && selectedPlayer && (
+        <div className="sell-modal-overlay">
+          <div className="sell-modal">
+            <h3>🏷️ Sell {selectedPlayer.name}</h3>
+            <p className="sell-info">💰 You will receive the starting price immediately!</p>
+            <div className="modal-content">
+              <div className="price-inputs">
+                <div className="input-group">
+                  <label>Sell Price (€):</label>
+                  <input
+                    type="number"
+                    value={sellPrice}
+                    onChange={(e) => setSellPrice(e.target.value)}
+                    placeholder="Enter sell price"
+                    min="1000000"
+                    step="100000"
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Buy Now Price (€):</label>
+                  <input
+                    type="number"
+                    value={buyNowPrice}
+                    onChange={(e) => setBuyNowPrice(e.target.value)}
+                    placeholder="Enter buy now price"
+                    min={parseInt(sellPrice) || 1000000}
+                    step="100000"
+                  />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button onClick={confirmSell} className="confirm-btn">
+                  💰 Sell Player
+                </button>
+                <button onClick={() => setShowSellModal(false)} className="cancel-btn">
+                  ❌ Cancel
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

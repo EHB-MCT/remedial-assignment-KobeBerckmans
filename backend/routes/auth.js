@@ -52,7 +52,7 @@ router.post('/register', async (req, res) => {
     // Create new club for the user
     const newClub = new Club({
       name: clubName,
-      budget: 100000000, // 100M starting budget
+      budget: 500000000, // 500M starting budget
       league: 'User League',
       country: 'User Country',
       playerIds: []
@@ -124,6 +124,14 @@ router.post('/login', async (req, res) => {
     // Update last login
     user.lastLogin = new Date();
     await user.save();
+
+    // Check if user has a club
+    if (!user.clubId) {
+      console.error('User has no club:', user.username);
+      return res.status(500).json({ 
+        message: 'User account is missing club data. Please contact support.' 
+      });
+    }
 
     // Generate JWT token
     const token = jwt.sign(

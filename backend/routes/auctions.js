@@ -11,7 +11,21 @@ router.get('/', async (req, res) => {
       .populate('highestBidder')
       .populate('bids.club')
       .sort({ endTime: 1 });
-    res.json(auctions);
+    
+    // Filter out auctions that have actually ended
+    const now = new Date();
+    const validAuctions = auctions.filter(auction => {
+      const hasEnded = now > auction.endTime;
+      if (hasEnded && auction.status === 'active') {
+        // Mark auction as ended if it has passed its end time
+        auction.status = 'ended';
+        auction.save().catch(err => console.error('Error updating auction status:', err));
+        return false;
+      }
+      return true;
+    });
+    
+    res.json(validAuctions);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -44,6 +58,16 @@ router.post('/', async (req, res) => {
       return res.status(404).json({ message: 'Club not found' });
     }
 
+    // Check if player is already in an active auction
+    const existingAuction = await Auction.findOne({
+      playerId: playerId,
+      status: 'active'
+    });
+
+    if (existingAuction) {
+      return res.status(400).json({ message: 'Player is already listed for sale' });
+    }
+
     const endTime = new Date();
     endTime.setHours(endTime.getHours() + durationHours);
 
@@ -62,8 +86,11 @@ router.post('/', async (req, res) => {
       .populate('currentClub')
       .populate('highestBidder');
 
+    console.log(`✅ Created auction for ${playerName} from ${currentClub.name}`);
+
     res.status(201).json(populatedAuction);
   } catch (err) {
+    console.error('Error creating auction:', err);
     res.status(400).json({ message: err.message });
   }
 });
@@ -78,11 +105,22 @@ router.post('/:id/bid', async (req, res) => {
       return res.status(404).json({ message: 'Auction not found' });
     }
 
+    console.log(`Bid attempt for auction ${auction._id}: status=${auction.status}, endTime=${auction.endTime}, now=${new Date()}`);
+    
     if (auction.status !== 'active') {
+      console.log(`Auction ${auction._id} is not active, status: ${auction.status}`);
       return res.status(400).json({ message: 'Auction is not active' });
     }
 
-    if (new Date() > auction.endTime) {
+    const now = new Date();
+    if (now > auction.endTime) {
+      console.log(`Auction ${auction._id} has ended, endTime: ${auction.endTime}, now: ${now}`);
+      return res.status(400).json({ message: 'Auction has ended' });
+    }
+
+    // Add a larger buffer to prevent race conditions (5 seconds)
+    if (now > new Date(auction.endTime.getTime() + 5000)) {
+      console.log(`Auction ${auction._id} ended with buffer, endTime: ${auction.endTime}, now: ${now}`);
       return res.status(400).json({ message: 'Auction has ended' });
     }
 
@@ -97,6 +135,37 @@ router.post('/:id/bid', async (req, res) => {
 
     if (amount <= auction.highestBid) {
       return res.status(400).json({ message: 'Bid must be higher than current highest bid' });
+    }
+
+    if (amount >= auction.buyNowPrice) {
+      return res.status(400).json({ 
+        message: `Bid cannot be higher than or equal to buy now price (€${auction.buyNowPrice.toLocaleString()}). Use buy now instead!` 
+      });
+    }
+
+    // Use atomic operations to prevent race conditions
+    const session = await Club.startSession();
+    try {
+      await session.withTransaction(async () => {
+        // Re-check club budget in transaction
+        const currentClub = await Club.findById(clubId).session(session);
+        if (!currentClub) {
+          throw new Error('Club not found during transaction');
+        }
+        
+        if (currentClub.budget < amount) {
+          throw new Error('Insufficient budget during transaction');
+        }
+
+        // Update club budget
+        await Club.findByIdAndUpdate(
+          clubId,
+          { $inc: { budget: -amount } },
+          { session }
+        );
+      });
+    } finally {
+      await session.endSession();
     }
 
     // Add bid
@@ -118,6 +187,7 @@ router.post('/:id/bid', async (req, res) => {
 
     res.json(populatedAuction);
   } catch (err) {
+    console.error('Bid error:', err);
     res.status(400).json({ message: err.message });
   }
 });
@@ -132,8 +202,18 @@ router.post('/:id/buy-now', async (req, res) => {
       return res.status(404).json({ message: 'Auction not found' });
     }
 
+    console.log(`Buy now attempt for auction ${auction._id}: status=${auction.status}, endTime=${auction.endTime}, now=${new Date()}`);
+    
     if (auction.status !== 'active') {
+      console.log(`Auction ${auction._id} is not active for buy now, status: ${auction.status}`);
       return res.status(400).json({ message: 'Auction is not active' });
+    }
+
+    // Check if auction has ended
+    const now = new Date();
+    if (now > auction.endTime) {
+      console.log(`Auction ${auction._id} has ended for buy now, endTime: ${auction.endTime}, now: ${now}`);
+      return res.status(400).json({ message: 'Auction has ended' });
     }
 
     const club = await Club.findById(clubId);
@@ -159,35 +239,59 @@ router.post('/:id/buy-now', async (req, res) => {
 
     console.log(`Processing buy now: ${club.name} buying ${auction.playerName} for ${auction.buyNowPrice}`);
 
-    // Update club budgets and player lists
-    club.budget -= auction.buyNowPrice;
-    club.playerIds.push(auction.playerId);
-    
-    // Add transfer history for buying club
-    club.transferHistory.push({
-      playerId: auction.playerId,
-      type: 'IN',
-      amount: auction.buyNowPrice,
-      date: new Date()
-    });
+    // Use atomic operations to avoid race conditions
+    const session = await Club.startSession();
+    try {
+      await session.withTransaction(async () => {
+        // Update buying club - add player and subtract budget
+        const buyingClubResult = await Club.findByIdAndUpdate(
+          club._id,
+          { 
+            $inc: { budget: -auction.buyNowPrice },
+            $addToSet: { playerIds: auction.playerId }, // Use addToSet to prevent duplicates
+            $push: { 
+              transferHistory: {
+                playerId: auction.playerId,
+                type: 'IN',
+                amount: auction.buyNowPrice,
+                date: new Date()
+              }
+            }
+          },
+          { new: true, session }
+        );
 
-    // Remove player from selling club and add money
-    sellingClub.budget += auction.buyNowPrice;
-    sellingClub.playerIds = sellingClub.playerIds.filter(id => id !== auction.playerId);
-    
-    // Add transfer history for selling club
-    sellingClub.transferHistory.push({
-      playerId: auction.playerId,
-      type: 'OUT',
-      amount: auction.buyNowPrice,
-      date: new Date()
-    });
+        if (!buyingClubResult) {
+          throw new Error('Failed to update buying club');
+        }
 
-    // Save both clubs
-    await club.save();
-    await sellingClub.save();
+        // Update selling club - remove player and add budget
+        const sellingClubResult = await Club.findByIdAndUpdate(
+          sellingClub._id,
+          { 
+            $inc: { budget: auction.buyNowPrice },
+            $pull: { playerIds: auction.playerId },
+            $push: { 
+              transferHistory: {
+                playerId: auction.playerId,
+                type: 'OUT',
+                amount: auction.buyNowPrice,
+                date: new Date()
+              }
+            }
+          },
+          { new: true, session }
+        );
 
-    console.log(`Buy now successful. ${club.name} now has ${club.playerIds.length} players and ${club.budget} budget`);
+        if (!sellingClubResult) {
+          throw new Error('Failed to update selling club');
+        }
+
+        console.log(`Buy now successful. ${buyingClubResult.name} now has ${buyingClubResult.playerIds.length} players and ${buyingClubResult.budget} budget`);
+      });
+    } finally {
+      await session.endSession();
+    }
 
     // End auction and assign player
     auction.status = 'ended';
@@ -208,7 +312,17 @@ router.post('/:id/buy-now', async (req, res) => {
       .populate('highestBidder')
       .populate('bids.club');
 
-    res.json(populatedAuction);
+    // Get updated club data
+    const updatedClub = await Club.findById(clubId);
+
+    // Add a special message for buy now
+    const responseData = {
+      ...populatedAuction.toObject(),
+      buyNowMessage: `💎 ${club.name} used BUY NOW to purchase ${auction.playerName} for €${auction.buyNowPrice.toLocaleString()}!`,
+      updatedClub: updatedClub
+    };
+
+    res.json(responseData);
   } catch (err) {
     console.error('Buy now error:', err);
     res.status(400).json({ message: err.message });
@@ -247,12 +361,16 @@ router.post('/:id/process', async (req, res) => {
       return res.status(404).json({ message: 'Auction not found' });
     }
 
+    console.log(`Process attempt for auction ${auction._id}: status=${auction.status}, endTime=${auction.endTime}, now=${new Date()}`);
+    
     if (auction.status !== 'active') {
+      console.log(`Auction ${auction._id} is not active for processing, status: ${auction.status}`);
       return res.status(400).json({ message: 'Auction is not active' });
     }
 
     const now = new Date();
     if (now <= auction.endTime) {
+      console.log(`Auction ${auction._id} has not ended yet, endTime: ${auction.endTime}, now: ${now}`);
       return res.status(400).json({ message: 'Auction has not ended yet' });
     }
 
@@ -272,35 +390,59 @@ router.post('/:id/process', async (req, res) => {
 
       console.log(`Transferring player from ${sellingClub.name} to ${buyingClub.name}`);
 
-      // Update club budgets and player lists
-      buyingClub.budget -= auction.highestBid;
-      buyingClub.playerIds.push(auction.playerId);
-      
-      // Add transfer history for buying club
-      buyingClub.transferHistory.push({
-        playerId: auction.playerId,
-        type: 'IN',
-        amount: auction.highestBid,
-        date: new Date()
-      });
+      // Use atomic operations to avoid race conditions
+      const session = await Club.startSession();
+      try {
+        await session.withTransaction(async () => {
+          // Update buying club - add player and subtract budget
+          const buyingClubResult = await Club.findByIdAndUpdate(
+            buyingClub._id,
+            { 
+              $inc: { budget: -auction.highestBid },
+              $addToSet: { playerIds: auction.playerId }, // Use addToSet to prevent duplicates
+              $push: { 
+                transferHistory: {
+                  playerId: auction.playerId,
+                  type: 'IN',
+                  amount: auction.highestBid,
+                  date: new Date()
+                }
+              }
+            },
+            { new: true, session }
+          );
 
-      // Remove player from selling club and add money
-      sellingClub.budget += auction.highestBid;
-      sellingClub.playerIds = sellingClub.playerIds.filter(id => id !== auction.playerId);
-      
-      // Add transfer history for selling club
-      sellingClub.transferHistory.push({
-        playerId: auction.playerId,
-        type: 'OUT',
-        amount: auction.highestBid,
-        date: new Date()
-      });
+          if (!buyingClubResult) {
+            throw new Error('Failed to update buying club');
+          }
 
-      // Save both clubs
-      await buyingClub.save();
-      await sellingClub.save();
+          // Update selling club - remove player and add budget
+          const sellingClubResult = await Club.findByIdAndUpdate(
+            sellingClub._id,
+            { 
+              $inc: { budget: auction.highestBid },
+              $pull: { playerIds: auction.playerId },
+              $push: { 
+                transferHistory: {
+                  playerId: auction.playerId,
+                  type: 'OUT',
+                  amount: auction.highestBid,
+                  date: new Date()
+                }
+              }
+            },
+            { new: true, session }
+          );
 
-      console.log(`Successfully transferred player. ${buyingClub.name} now has ${buyingClub.playerIds.length} players`);
+          if (!sellingClubResult) {
+            throw new Error('Failed to update selling club');
+          }
+
+          console.log(`Successfully transferred player. ${buyingClubResult.name} now has ${buyingClubResult.playerIds.length} players`);
+        });
+      } finally {
+        await session.endSession();
+      }
     } else {
       console.log('No highest bidder found for this auction');
     }

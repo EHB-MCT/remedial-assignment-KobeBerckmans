@@ -78,12 +78,12 @@ function PlayersPage() {
   );
 }
 
-function MyClubPage({ user, club }) {
+function MyClubPage({ user, club, onClubUpdate }) {
   return (
     <main className="app-main">
       <section id="myclub">
         <h2>My Club</h2>
-        <MyClub user={user} club={club} />
+        <MyClub user={user} club={club} onClubUpdate={onClubUpdate} />
       </section>
     </main>
   );
@@ -204,7 +204,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home user={user} club={club} />} />
           <Route path="/players" element={<PlayersPage />} />
-          <Route path="/myclub" element={<MyClubPage user={user} club={club} />} />
+          <Route path="/myclub" element={<MyClubPage user={user} club={club} onClubUpdate={handleClubUpdate} />} />
           <Route path="/transfers" element={<TransfersPage user={user} club={club} onClubUpdate={handleClubUpdate} />} />
           <Route path="/history" element={<HistoryPage />} />
         </Routes>

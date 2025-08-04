@@ -3,6 +3,9 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+// Import and start autoBidder
+require('./scripts/autoBidder');
+
 const app = express();
 
 // Middleware

@@ -1,6 +1,199 @@
 const Transfer = require('../models/Transfer');
 const Club = require('../models/Club');
 const Auction = require('../models/Auction');
+const axios = require('axios');
+
+// AI clubs that will automatically bid (updated with new club IDs and 500M budget)
+const AI_CLUBS = [
+  { id: '688b7a69b6517d2d0f319e3d', name: 'Manchester City', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e3e', name: 'Real Madrid', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e3f', name: 'Bayern Munich', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e40', name: 'Paris Saint-Germain', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e41', name: 'Liverpool', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e42', name: 'Barcelona', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e43', name: 'Manchester United', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e44', name: 'Chelsea', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e45', name: 'Arsenal', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e46', name: 'Tottenham Hotspur', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e47', name: 'Atletico Madrid', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e48', name: 'Sevilla', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e49', name: 'Borussia Dortmund', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e4a', name: 'RB Leipzig', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e4b', name: 'Bayer Leverkusen', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e4c', name: 'AC Milan', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e4d', name: 'Inter Milan', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e4e', name: 'Juventus', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e4f', name: 'Napoli', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e50', name: 'AS Roma', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e51', name: 'Marseille', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e52', name: 'Lyon', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e53', name: 'Monaco', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e54', name: 'Porto', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e55', name: 'Benfica', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e56', name: 'Ajax', budget: 500000000 },
+  { id: '688b7a69b6517d2d0f319e57', name: 'PSV Eindhoven', budget: 500000000 }
+];
+
+// Function to place a bid (for AI)
+async function placeAIBid(auctionId, clubId, amount) {
+  try {
+    const response = await axios.post(`http://localhost:3000/api/auctions/${auctionId}/bid`, {
+      clubId: clubId,
+      amount: amount
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`AI bid failed for auction ${auctionId}:`, error.response?.data?.message || error.message);
+    return null;
+  }
+}
+
+// Function to buy now (for AI)
+async function buyNowAI(auctionId, clubId) {
+  try {
+    const response = await axios.post(`http://localhost:3000/api/auctions/${auctionId}/buy-now`, {
+      clubId: clubId
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`AI buy now failed for auction ${auctionId}:`, error.response?.data?.message || error.message);
+    return null;
+  }
+}
+
+// Function to get current club budgets
+async function getClubBudgets() {
+  try {
+    const response = await axios.get('http://localhost:3000/api/clubs');
+    const clubs = response.data;
+    return clubs.reduce((acc, club) => {
+      acc[club._id] = club.budget;
+      return acc;
+    }, {});
+  } catch (error) {
+    return {};
+  }
+}
+
+// Function to trigger AI bidding on auctions
+async function triggerAIBidding() {
+  try {
+    console.log('🤖 Triggering AI bidding after simulation...');
+    
+    // Get current auctions
+    const auctionsResponse = await axios.get('http://localhost:3000/api/auctions');
+    const auctions = auctionsResponse.data.filter(auction => auction.status === 'active');
+    
+    if (auctions.length === 0) {
+      console.log('📭 No active auctions found for AI bidding');
+      return;
+    }
+    
+    console.log(`📋 Found ${auctions.length} active auctions for AI bidding`);
+    
+    // Get current club budgets
+    const clubBudgets = await getClubBudgets();
+    
+    // Process each auction individually to avoid race conditions
+    for (const auction of auctions) {
+      try {
+        console.log(`\n🎯 AI bidding on auction for ${auction.playerName}`);
+        
+        // Re-fetch auction to get latest status
+        const currentAuctionResponse = await axios.get(`http://localhost:3000/api/auctions/${auction._id}`);
+        const currentAuction = currentAuctionResponse.data;
+        
+        // Check if auction is still active
+        if (currentAuction.status !== 'active') {
+          console.log(`⏰ Auction ${auction.playerName} is no longer active (${currentAuction.status})`);
+          continue;
+        }
+        
+        // Check if auction has ended
+        const timeLeft = new Date(currentAuction.endTime) - new Date();
+        if (timeLeft <= 0) {
+          console.log(`⏰ Auction ${auction.playerName} has ended, skipping...`);
+          continue;
+        }
+        
+        // Track which clubs have already processed this auction
+        const processedClubs = new Set();
+        
+        // For each AI club, decide whether to bid
+        for (const aiClub of AI_CLUBS) {
+          try {
+            // Skip if this club already processed this auction
+            if (processedClubs.has(aiClub.id)) {
+              continue;
+            }
+            
+            const currentBudget = clubBudgets[aiClub.id] || aiClub.budget;
+            
+            // Check if club can afford the minimum bid
+            const minBid = currentAuction.highestBid > 0 ? currentAuction.highestBid : currentAuction.startingPrice;
+            
+            if (currentBudget < minBid) {
+              continue;
+            }
+            
+            // 25% chance to bid (reduced to make auctions last longer)
+            const bidChance = Math.random();
+            
+            if (bidChance < 0.25) {
+              // Calculate bid amount (but don't exceed buy now price)
+              const maxBid = Math.min(
+                Math.floor(minBid * (1 + Math.random() * 0.2)), // 0-20% increase (smaller increases)
+                currentAuction.buyNowPrice - 1 // Stay below buy now price
+              );
+              
+              if (maxBid > minBid && maxBid <= currentBudget) {
+                const result = await placeAIBid(currentAuction._id, aiClub.id, maxBid);
+                if (result) {
+                  clubBudgets[aiClub.id] = result.highestBidder.budget;
+                  processedClubs.add(aiClub.id); // Mark as processed
+                }
+              }
+            }
+            
+            // 5% chance to buy now (very rare to avoid abrupt auction endings)
+            const buyNowChance = Math.random();
+            
+            if (buyNowChance < 0.05 && currentBudget >= currentAuction.buyNowPrice) {
+              console.log(`💎 ${aiClub.name} decides to BUY NOW for €${currentAuction.buyNowPrice.toLocaleString()}!`);
+              const result = await buyNowAI(currentAuction._id, aiClub.id);
+              if (result) {
+                clubBudgets[aiClub.id] = result.highestBidder.budget;
+                processedClubs.add(aiClub.id); // Mark as processed
+                console.log(`✅ ${aiClub.name} successfully bought ${currentAuction.playerName} for €${currentAuction.buyNowPrice.toLocaleString()}`);
+                break; // Stop processing this auction since it's been bought
+              }
+            }
+            
+            // Mark this club as processed for this auction
+            processedClubs.add(aiClub.id);
+            
+          } catch (error) {
+            console.error(`Error with AI club ${aiClub.name}:`, error);
+            // Continue with next AI club
+          }
+        }
+        
+        // Add a small delay between auctions to prevent overwhelming the server
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+      } catch (error) {
+        console.error(`❌ Error processing auction ${auction.playerName}:`, error.message);
+        // Continue with next auction
+      }
+    }
+    
+    console.log('✅ AI bidding completed');
+    
+  } catch (error) {
+    console.error('❌ AI bidding error:', error);
+    throw error; // Re-throw to be caught by the caller
+  }
+}
 
 // Simulate a single transfer
 const simulateTransfer = async (req, res) => {
@@ -163,59 +356,73 @@ const simulateDay = async (req, res) => {
 
     for (const auction of endedAuctions) {
       if (auction.highestBidder) {
-        // Complete the transfer
-        const transfer = new Transfer({
-          playerId: auction.playerId,
-          playerName: auction.playerName,
-          fromClub: auction.currentClub._id,
-          toClub: auction.highestBidder._id,
-          amount: auction.highestBid,
-          status: 'completed',
-          transferWindow: 'Daily Simulation',
-          notes: `Auction completed: ${auction.playerName} sold for ${auction.highestBid.toLocaleString()}`
-        });
+        // Complete the transfer using atomic operations
+        const session = await Club.startSession();
+        try {
+          await session.withTransaction(async () => {
+            // Get clubs with session
+            const fromClub = await Club.findById(auction.currentClub._id).session(session);
+            const toClub = await Club.findById(auction.highestBidder._id).session(session);
+            
+            if (!fromClub || !toClub) {
+              throw new Error('Club not found during transfer');
+            }
 
-        await transfer.save();
+            // Update buying club - add player and subtract budget
+            const buyingClubResult = await Club.findByIdAndUpdate(
+              toClub._id,
+              { 
+                $inc: { budget: -auction.highestBid },
+                $addToSet: { playerIds: auction.playerId }, // Use addToSet to prevent duplicates
+                $push: { 
+                  transferHistory: {
+                    playerId: auction.playerId,
+                    type: 'IN',
+                    amount: auction.highestBid,
+                    date: new Date()
+                  }
+                }
+              },
+              { new: true, session }
+            );
 
-        // Update club budgets and player lists
-        const fromClub = await Club.findById(auction.currentClub._id);
-        const toClub = await Club.findById(auction.highestBidder._id);
+            if (!buyingClubResult) {
+              throw new Error('Failed to update buying club');
+            }
 
-        if (fromClub && toClub) {
-          // Remove player from selling club
-          fromClub.playerIds = fromClub.playerIds.filter(id => id !== auction.playerId);
-          fromClub.budget += auction.highestBid;
-          
-          // Add player to buying club
-          toClub.playerIds.push(auction.playerId);
-          toClub.budget -= auction.highestBid;
+            // Update selling club - remove player and add budget
+            const sellingClubResult = await Club.findByIdAndUpdate(
+              fromClub._id,
+              { 
+                $inc: { budget: auction.highestBid },
+                $pull: { playerIds: auction.playerId },
+                $push: { 
+                  transferHistory: {
+                    playerId: auction.playerId,
+                    type: 'OUT',
+                    amount: auction.highestBid,
+                    date: new Date()
+                  }
+                }
+              },
+              { new: true, session }
+            );
 
-          // Add to transfer history
-          fromClub.transferHistory.push({
-            playerId: auction.playerId,
-            type: 'OUT',
-            amount: auction.highestBid,
-            date: new Date()
+            if (!sellingClubResult) {
+              throw new Error('Failed to update selling club');
+            }
+
+            results.completedTransfers.push({
+              player: auction.playerName,
+              from: sellingClubResult.name,
+              to: buyingClubResult.name,
+              amount: auction.highestBid
+            });
+
+            results.updatedClubs.push(sellingClubResult.name, buyingClubResult.name);
           });
-
-          toClub.transferHistory.push({
-            playerId: auction.playerId,
-            type: 'IN',
-            amount: auction.highestBid,
-            date: new Date()
-          });
-
-          await fromClub.save();
-          await toClub.save();
-
-          results.completedTransfers.push({
-            player: auction.playerName,
-            from: fromClub.name,
-            to: toClub.name,
-            amount: auction.highestBid
-          });
-
-          results.updatedClubs.push(fromClub.name, toClub.name);
+        } finally {
+          await session.endSession();
         }
       }
 
@@ -241,7 +448,7 @@ const simulateDay = async (req, res) => {
     await client.close();
 
     // Select random players for new auctions
-    const numNewAuctions = Math.floor(Math.random() * 3) + 2; // 2-4 new auctions
+    const numNewAuctions = Math.floor(Math.random() * 5) + 5; // 5-10 new auctions
     const selectedPlayers = [];
     
     // Get all player IDs that are currently in clubs
@@ -255,26 +462,35 @@ const simulateDay = async (req, res) => {
     
     for (let i = 0; i < numNewAuctions; i++) {
       const randomPlayer = players[Math.floor(Math.random() * players.length)];
-      const randomClub = clubs[Math.floor(Math.random() * clubs.length)];
       
-      // Check if player is not already in any club and not in an active auction
-      const existingAuction = await Auction.findOne({
-        playerId: randomPlayer._id.toString(),
-        status: 'active'
-      });
-
-      if (!existingAuction && !playersInClubs.has(randomPlayer._id.toString())) {
-        selectedPlayers.push({
-          player: randomPlayer,
-          club: randomClub
+      // Find clubs that actually have this player
+      const clubsWithPlayer = clubs.filter(club => 
+        club.playerIds.includes(randomPlayer._id.toString())
+      );
+      
+      // Only create auction if player is in a club
+      if (clubsWithPlayer.length > 0) {
+        const randomClub = clubsWithPlayer[Math.floor(Math.random() * clubsWithPlayer.length)];
+        
+        // Check if player is not already in an active auction
+        const existingAuction = await Auction.findOne({
+          playerId: randomPlayer._id.toString(),
+          status: 'active'
         });
+
+        if (!existingAuction) {
+          selectedPlayers.push({
+            player: randomPlayer,
+            club: randomClub
+          });
+        }
       }
     }
 
     // Create new auctions
     for (const { player, club } of selectedPlayers) {
       const endTime = new Date();
-      endTime.setMinutes(endTime.getMinutes() + Math.floor(Math.random() * 10) + 5); // 5-15 minutes
+      endTime.setMinutes(endTime.getMinutes() + 15); // 15 minutes for longer auctions
 
       const startingPrice = Math.floor(player.marketValue * (0.7 + Math.random() * 0.3));
       const buyNowPrice = Math.floor(player.marketValue * (1.1 + Math.random() * 0.4));
@@ -301,62 +517,109 @@ const simulateDay = async (req, res) => {
       });
     }
 
+    // Trigger AI bidding on new auctions
+    try {
+      await triggerAIBidding();
+    } catch (error) {
+      console.error('AI bidding error:', error);
+      // Continue with simulation even if AI bidding fails
+    }
+
     // 3. Simulate some random transfers between clubs
     const numRandomTransfers = Math.floor(Math.random() * 3) + 1; // 1-3 random transfers
     
     for (let i = 0; i < numRandomTransfers; i++) {
-      const randomPlayer = players[Math.floor(Math.random() * players.length)];
-      const availableClubs = clubs.filter(club => club.name !== randomPlayer.club);
+      // Find clubs that have players
+      const clubsWithPlayers = clubs.filter(club => club.playerIds.length > 0);
       
-      if (availableClubs.length > 0) {
-        const fromClub = clubs.find(club => club.name === randomPlayer.club) || clubs[0];
-        const toClub = availableClubs[Math.floor(Math.random() * availableClubs.length)];
+      if (clubsWithPlayers.length >= 2) {
+        const fromClub = clubsWithPlayers[Math.floor(Math.random() * clubsWithPlayers.length)];
+        const availableToClubs = clubsWithPlayers.filter(club => club._id.toString() !== fromClub._id.toString());
         
-        const transferAmount = Math.floor(randomPlayer.marketValue * (0.8 + Math.random() * 0.4));
-        
-        if (toClub.budget >= transferAmount) {
-          const transfer = new Transfer({
-            playerId: randomPlayer._id.toString(),
-            playerName: randomPlayer.name,
-            fromClub: fromClub._id,
-            toClub: toClub._id,
-            amount: transferAmount,
-            status: 'completed',
-            transferWindow: 'Daily Simulation',
-            notes: `Direct transfer: ${randomPlayer.name}`
-          });
+        if (availableToClubs.length > 0 && fromClub.playerIds.length > 0) {
+          const toClub = availableToClubs[Math.floor(Math.random() * availableToClubs.length)];
+          
+          // Pick a random player from the fromClub
+          const randomPlayerId = fromClub.playerIds[Math.floor(Math.random() * fromClub.playerIds.length)];
+          const randomPlayer = players.find(p => p._id.toString() === randomPlayerId);
+          
+          if (randomPlayer) {
+            const transferAmount = Math.floor(randomPlayer.marketValue * (0.8 + Math.random() * 0.4));
+            
+            if (toClub.budget >= transferAmount) {
+              const transfer = new Transfer({
+                playerId: randomPlayer._id.toString(),
+                playerName: randomPlayer.name,
+                fromClub: fromClub._id,
+                toClub: toClub._id,
+                amount: transferAmount,
+                status: 'completed',
+                transferWindow: 'Daily Simulation',
+                notes: `Direct transfer: ${randomPlayer.name}`
+              });
 
-          await transfer.save();
+              await transfer.save();
 
-          // Update clubs
-          fromClub.playerIds = fromClub.playerIds.filter(id => id !== randomPlayer._id.toString());
-          fromClub.budget += transferAmount;
-          toClub.playerIds.push(randomPlayer._id.toString());
-          toClub.budget -= transferAmount;
+              // Update clubs using atomic operations
+              const session = await Club.startSession();
+              try {
+                await session.withTransaction(async () => {
+                  // Update from club - remove player and add budget
+                  const fromClubResult = await Club.findByIdAndUpdate(
+                    fromClub._id,
+                    { 
+                      $inc: { budget: transferAmount },
+                      $pull: { playerIds: randomPlayer._id.toString() },
+                      $push: { 
+                        transferHistory: {
+                          playerId: randomPlayer._id.toString(),
+                          type: 'OUT',
+                          amount: transferAmount,
+                          date: new Date()
+                        }
+                      }
+                    },
+                    { new: true, session }
+                  );
 
-          fromClub.transferHistory.push({
-            playerId: randomPlayer._id.toString(),
-            type: 'OUT',
-            amount: transferAmount,
-            date: new Date()
-          });
+                  if (!fromClubResult) {
+                    throw new Error('Failed to update from club');
+                  }
 
-          toClub.transferHistory.push({
-            playerId: randomPlayer._id.toString(),
-            type: 'IN',
-            amount: transferAmount,
-            date: new Date()
-          });
+                  // Update to club - add player and subtract budget
+                  const toClubResult = await Club.findByIdAndUpdate(
+                    toClub._id,
+                    { 
+                      $inc: { budget: -transferAmount },
+                      $addToSet: { playerIds: randomPlayer._id.toString() },
+                      $push: { 
+                        transferHistory: {
+                          playerId: randomPlayer._id.toString(),
+                          type: 'IN',
+                          amount: transferAmount,
+                          date: new Date()
+                        }
+                      }
+                    },
+                    { new: true, session }
+                  );
 
-          await fromClub.save();
-          await toClub.save();
+                  if (!toClubResult) {
+                    throw new Error('Failed to update to club');
+                  }
 
-          results.completedTransfers.push({
-            player: randomPlayer.name,
-            from: fromClub.name,
-            to: toClub.name,
-            amount: transferAmount
-          });
+                  results.completedTransfers.push({
+                    player: randomPlayer.name,
+                    from: fromClubResult.name,
+                    to: toClubResult.name,
+                    amount: transferAmount
+                  });
+                });
+              } finally {
+                await session.endSession();
+              }
+            }
+          }
         }
       }
     }

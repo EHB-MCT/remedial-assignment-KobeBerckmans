@@ -368,6 +368,44 @@
     font-size: 0.7rem;
 }
 
+.latest-bid {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    animation: pulse-latest 2s infinite;
+}
+
+.latest-bid .bidder-name {
+    font-weight: bold;
+}
+
+.latest-bid .bid-amount {
+    font-weight: bold;
+    color: #fff;
+}
+
+.latest-bid .bid-time {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+@keyframes pulse-latest {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.more-bids {
+    text-align: center;
+    padding: 10px;
+    color: #6c757d;
+    font-style: italic;
+}
+
 .transfer-market-loading {
     text-align: center;
     padding: 40px;

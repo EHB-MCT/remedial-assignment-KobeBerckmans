@@ -25,6 +25,44 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// GET club players
+router.get('/:id/players', async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id);
+    if (!club) {
+      return res.status(404).json({ message: 'Club not found' });
+    }
+
+    // Get players from MongoDB
+    const { MongoClient, ServerApiVersion } = require('mongodb');
+    const mongoUri = process.env.MONGODB_URI;
+    const client = new MongoClient(mongoUri, {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+      }
+    });
+    await client.connect();
+    const db = client.db('Course_Project');
+    const players = await db.collection('Players').find({}).toArray();
+    await client.close();
+
+    // Filter players that belong to this club
+    const clubPlayers = players.filter(player => 
+      club.playerIds.includes(player._id.toString())
+    );
+
+    res.json({
+      club: club,
+      players: clubPlayers,
+      playerCount: clubPlayers.length
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // POST new club
 router.post('/', async (req, res) => {
   const club = new Club({
