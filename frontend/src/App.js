@@ -8,6 +8,7 @@ import DailySimulation from './components/DailySimulation';
 import MyClub from './components/MyClub';
 import Login from './components/Login';
 import Register from './components/Register';
+import PlayerForm from './components/PlayerForm';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -58,9 +59,9 @@ function Home({ user, club }) {
           <p>Participate in live auctions, place bids on players, and negotiate transfers. The market is dynamic with real-time updates and competitive bidding.</p>
         </section>
 
-        <section className="homepage-section history-section">
-          <h2>📊 Transfer History</h2>
-          <p>Track all your completed transfers, view transaction history, and analyze your club's transfer strategy over time.</p>
+        <section className="homepage-section player-form-section">
+          <h2>📊 Player Form</h2>
+          <p>Track player performance, recent form, and match ratings. Analyze which players are in top form and make informed transfer decisions.</p>
         </section>
       </div>
     </main>
@@ -101,12 +102,11 @@ function TransfersPage({ user, club, onClubUpdate }) {
   );
 }
 
-function HistoryPage() {
+function PlayerFormPage({ user, club }) {
   return (
     <main className="app-main">
-      <section id="history">
-        <h2>Transfer History</h2>
-        {/* Transfer history/component komt hier */}
+      <section id="player-form">
+        <PlayerForm user={user} club={club} />
       </section>
     </main>
   );
@@ -197,7 +197,7 @@ function App() {
               <li><Link to="/myclub">My Club</Link></li>
               <li><Link to="/players">Players</Link></li>
               <li><Link to="/transfers">Transfers</Link></li>
-              <li><Link to="/history">History</Link></li>
+              <li><Link to="/player-form">Player Form</Link></li>
             </ul>
           </nav>
         </header>
@@ -206,7 +206,7 @@ function App() {
           <Route path="/players" element={<PlayersPage />} />
           <Route path="/myclub" element={<MyClubPage user={user} club={club} onClubUpdate={handleClubUpdate} />} />
           <Route path="/transfers" element={<TransfersPage user={user} club={club} onClubUpdate={handleClubUpdate} />} />
-          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/player-form" element={<PlayerFormPage user={user} club={club} />} />
         </Routes>
         <footer className="app-footer">
           <p>&copy; {new Date().getFullYear()} TransferMarketSim</p>
