@@ -29,6 +29,8 @@ A comprehensive football transfer market simulation platform with real-time auct
 - [Usage](#usage)
 - [Architecture](#architecture)
 - [API Documentation](#api-documentation)
+- [Technology Stack](#technology-stack)
+- [Sources & References](#sources--references)
 - [Contributing](#contributing)
 - [Code of Conduct](#code-of-conduct)
 - [License](#license)
@@ -347,6 +349,15 @@ For support and questions:
 - **Authentication**: JWT tokens
 - **Real-time**: Polling-based live updates
 - **Styling**: CSS3 with responsive design
+
+## Sources & References
+
+### AI Assistance
+- **ChatGPT**: Used for code understanding, debugging assistance, and architectural guidance throughout development
+
+### Research & Inspiration
+- **[Soccer Simulation for a Game](https://stackoverflow.com/questions/1427043/soccer-simulation-for-a-game)**: Stack Overflow discussion on building realistic soccer match simulation engines
+- **[Improving Soccer Simulation Algorithm](https://stackoverflow.com/questions/1439102/improving-soccer-simulation-algorithm)**: Follow-up discussion on enhancing simulation algorithms and reducing randomness
 
 ---
 
