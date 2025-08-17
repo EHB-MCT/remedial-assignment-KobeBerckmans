@@ -1,3 +1,19 @@
+/**
+ * App Component Styles
+ * 
+ * Main application styles including navigation, layout, homepage sections,
+ * and responsive design for the Football Transfer Market Simulation app.
+ * 
+ * @author Kobe Berckmans
+ * @version 1.0.0
+ * @license MIT
+ */
+
+/* ==========================================================================
+   LAYOUT & CONTAINER STYLES
+   ========================================================================== */
+
+/* Main App Container - Full viewport height with gradient background */
 .app-container {
     min-height: 100vh;
     display: flex;
@@ -5,6 +21,20 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
+/* Main Content Area - Flexible content container with max width */
+.app-main {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* ==========================================================================
+   NAVIGATION & HEADER STYLES
+   ========================================================================== */
+
+/* App Header - Top navigation bar with glassmorphism effect */
 .app-header {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -16,6 +46,7 @@
     flex-wrap: wrap;
 }
 
+/* Header Title - Main application title styling */
 .app-header h1 {
     margin: 0;
     color: #2c3e50;
@@ -23,6 +54,7 @@
     font-weight: bold;
 }
 
+/* Title Link - Clickable title with hover effects */
 .app-title-link {
     text-decoration: none;
     color: inherit;
@@ -33,6 +65,7 @@
     color: #667eea;
 }
 
+/* User Information Section - Welcome text and user details */
 .user-info {
     display: flex;
     align-items: center;
@@ -40,12 +73,14 @@
     margin: 0 20px;
 }
 
+/* Welcome Text - User greeting message styling */
 .welcome-text {
     color: #2c3e50;
     font-weight: 600;
     font-size: 0.9rem;
 }
 
+/* Club Name Badge - User's club display with gradient background */
 .club-name {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -55,6 +90,7 @@
     font-weight: bold;
 }
 
+/* Logout Button - User logout action button */
 .logout-btn {
     background: #e74c3c;
     color: white;
@@ -67,11 +103,13 @@
     transition: all 0.3s ease;
 }
 
+/* Logout Button Hover - Enhanced interaction feedback */
 .logout-btn:hover {
     background: #c0392b;
     transform: translateY(-1px);
 }
 
+/* Navigation List - Main navigation menu */
 .nav-list {
     list-style: none;
     display: flex;
@@ -80,6 +118,7 @@
     padding: 0;
 }
 
+/* Navigation Links - Individual navigation item styling */
 .nav-list li a {
     text-decoration: none;
     color: #2c3e50;
@@ -90,20 +129,17 @@
     transition: all 0.3s ease;
 }
 
+/* Navigation Link Hover - Interactive feedback for navigation items */
 .nav-list li a:hover {
     color: #667eea;
     background: rgba(102, 126, 234, 0.1);
 }
 
-.app-main {
-    flex: 1;
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-    width: 100%;
-}
+/* ==========================================================================
+   HOMEPAGE SECTION STYLES
+   ========================================================================== */
 
-/* Homepage specific styling */
+/* Homepage Container - Grid layout for homepage sections */
 .homepage-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -111,6 +147,7 @@
     margin-top: 2rem;
 }
 
+/* Homepage Section - Individual feature section styling */
 .homepage-section {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -121,11 +158,13 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Section Hover Effects - Enhanced interaction feedback */
 .homepage-section:hover {
     transform: translateY(-5px);
     box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
 }
 
+/* Section Headers - Title styling for each homepage section */
 .homepage-section h2 {
     color: #2c3e50;
     font-size: 1.8rem;
@@ -136,6 +175,7 @@
     gap: 0.5rem;
 }
 
+/* Section Header Accent - Decorative line before section titles */
 .homepage-section h2::before {
     content: '';
     width: 4px;
@@ -144,6 +184,7 @@
     border-radius: 2px;
 }
 
+/* Section Content - Paragraph text styling within sections */
 .homepage-section p {
     color: #2c3e50;
     font-size: 1rem;
@@ -152,53 +193,66 @@
     font-weight: 500;
 }
 
+/* Section Emphasis - Bold text styling for important information */
 .homepage-section strong {
     color: #667eea;
     font-weight: 700;
 }
 
-/* My Club section */
+/* ==========================================================================
+   SPECIFIC SECTION STYLES
+   ========================================================================== */
+
+/* My Club Section - Special styling for club management section */
 .myclub-section {
     grid-column: 1 / -1;
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
     border: 2px solid rgba(102, 126, 234, 0.2);
 }
 
+/* My Club Header Accent - Green accent line for club section */
 .myclub-section h2::before {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
 }
 
-/* Players section */
+/* Players Section - Special styling for player database section */
 .players-section {
     background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(32, 201, 151, 0.1) 100%);
     border: 2px solid rgba(40, 167, 69, 0.2);
 }
 
+/* Players Header Accent - Green accent line for players section */
 .players-section h2::before {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
 }
 
-/* Transfers section */
+/* Transfers Section - Special styling for transfer market section */
 .transfers-section {
     background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);
     border: 2px solid rgba(255, 193, 7, 0.2);
 }
 
+/* Transfers Header Accent - Yellow accent line for transfers section */
 .transfers-section h2::before {
     background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
 }
 
-/* History section */
+/* History Section - Special styling for history section */
 .history-section {
     background: linear-gradient(135deg, rgba(108, 117, 125, 0.1) 0%, rgba(73, 80, 87, 0.1) 100%);
     border: 2px solid rgba(108, 117, 125, 0.2);
 }
 
+/* History Header Accent - Gray accent line for history section */
 .history-section h2::before {
     background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
 }
 
-/* Welcome banner */
+/* ==========================================================================
+   WELCOME BANNER & STATS
+   ========================================================================== */
+
+/* Welcome Banner - Hero section with gradient background */
 .welcome-banner {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -209,6 +263,7 @@
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
+/* Welcome Title - Main heading in welcome banner */
 .welcome-banner h1 {
     font-size: 2.5rem;
     font-weight: bold;
@@ -216,13 +271,14 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* Welcome Description - Subtitle text in welcome banner */
 .welcome-banner p {
     font-size: 1.2rem;
     opacity: 0.9;
     margin: 0;
 }
 
-/* Stats cards */
+/* Stats Grid - Container for statistics cards */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -230,6 +286,7 @@
     margin-top: 1.5rem;
 }
 
+/* Individual Stat Card - Individual statistics display */
 .stat-card {
     background: rgba(255, 255, 255, 0.2);
     padding: 1rem;
@@ -239,6 +296,7 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+/* Stat Number - Large number display in stat cards */
 .stat-card .stat-number {
     font-size: 2rem;
     font-weight: bold;
@@ -247,6 +305,7 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* Stat Label - Description text below stat numbers */
 .stat-card .stat-label {
     font-size: 0.9rem;
     color: #ffffff;
@@ -255,6 +314,11 @@
     opacity: 0.95;
 }
 
+/* ==========================================================================
+   FOOTER & RESPONSIVE DESIGN
+   ========================================================================== */
+
+/* App Footer - Bottom section of the application */
 .app-footer {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -264,45 +328,55 @@
     font-weight: 600;
 }
 
-/* Responsive design */
+/* Responsive Design - Mobile-first approach for smaller screens */
 @media (max-width: 768px) {
+
+    /* Header adjustments for mobile devices */
     .app-header {
         flex-direction: column;
         gap: 1rem;
         padding: 1rem;
     }
 
+    /* User info positioning on mobile */
     .user-info {
         order: 2;
         margin: 0;
     }
 
+    /* Navigation positioning on mobile */
     .nav-list {
         order: 3;
         gap: 1rem;
     }
 
+    /* Main content padding adjustment for mobile */
     .app-main {
         padding: 1rem;
     }
 
+    /* Single column layout for homepage sections on mobile */
     .homepage-container {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
 
+    /* Reduced welcome banner title size on mobile */
     .welcome-banner h1 {
         font-size: 2rem;
     }
 
+    /* Reduced welcome banner description size on mobile */
     .welcome-banner p {
         font-size: 1rem;
     }
 
+    /* Reduced section padding on mobile */
     .homepage-section {
         padding: 1.5rem;
     }
 
+    /* Reduced section header size on mobile */
     .homepage-section h2 {
         font-size: 1.5rem;
     }

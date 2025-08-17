@@ -1,19 +1,34 @@
+/**
+ * TransferList Component Styles
+ * 
+ * CSS styles for the TransferList component that displays
+ * comprehensive transfer transaction history and details.
+ * 
+ * @author Kobe Berckmans
+ * @version 1.0.0
+ * @license MIT
+ */
+
+/* Main Container - Primary wrapper for transfer list display */
 .transfer-list {
     margin-top: 2rem;
 }
 
+/* Component Header - Title styling for transfer history section */
 .transfer-list h3 {
     color: #ffd700;
     margin-bottom: 1.5rem;
     font-size: 1.4rem;
 }
 
+/* Transfer Grid Layout - Responsive grid for transfer cards */
 .transfer-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
 }
 
+/* Individual Transfer Card - Styling for each transfer item */
 .transfer-card {
     background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     border-radius: 1rem;
@@ -22,11 +37,13 @@
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
+/* Card Hover Effects - Enhanced interaction feedback */
 .transfer-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
+/* Transfer Header - Status and amount display section */
 .transfer-header {
     display: flex;
     justify-content: space-between;
@@ -34,6 +51,7 @@
     margin-bottom: 1rem;
 }
 
+/* Status Badge - Visual indicator for transfer status */
 .transfer-status {
     padding: 0.3rem 0.8rem;
     border-radius: 0.5rem;
@@ -43,12 +61,14 @@
     text-transform: uppercase;
 }
 
+/* Transfer Amount - Styling for monetary values */
 .transfer-amount {
     font-size: 1.2rem;
     font-weight: 700;
     color: #ffd700;
 }
 
+/* Player Information - Player name and icon display */
 .transfer-player {
     display: flex;
     align-items: center;
@@ -59,6 +79,7 @@
     color: #fff;
 }
 
+/* Club Information - From and to club details */
 .transfer-clubs {
     display: flex;
     align-items: center;
@@ -66,11 +87,13 @@
     margin-bottom: 1rem;
 }
 
+/* Individual Club Display - Styling for club information */
 .club {
     flex: 1;
     text-align: center;
 }
 
+/* Club Label - "From" and "To" text styling */
 .club span {
     display: block;
     font-size: 0.8rem;
@@ -78,17 +101,20 @@
     margin-bottom: 0.2rem;
 }
 
+/* Club Name - Bold club name display */
 .club strong {
     color: #fff;
     font-size: 1rem;
 }
 
+/* Transfer Arrow - Visual indicator for transfer direction */
 .transfer-arrow {
     font-size: 1.5rem;
     color: #ffd700;
     font-weight: bold;
 }
 
+/* Transfer Notes - Optional additional information display */
 .transfer-notes {
     margin-bottom: 1rem;
     padding: 0.5rem;
@@ -98,12 +124,14 @@
     color: #bdc3c7;
 }
 
+/* Transfer Date - Timestamp display */
 .transfer-date {
     text-align: right;
     font-size: 0.8rem;
     color: #95a5a6;
 }
 
+/* Loading State - Styling for loading indicator */
 .transfer-list-loading {
     text-align: center;
     font-size: 1.2rem;
@@ -111,6 +139,7 @@
     margin-top: 2rem;
 }
 
+/* Empty State - Message when no transfers exist */
 .no-transfers {
     text-align: center;
     padding: 3rem;
@@ -118,16 +147,21 @@
     font-style: italic;
 }
 
+/* Responsive Design - Mobile-first approach for smaller screens */
 @media (max-width: 768px) {
+
+    /* Single column layout on mobile devices */
     .transfer-grid {
         grid-template-columns: 1fr;
     }
 
+    /* Stack club information vertically on mobile */
     .transfer-clubs {
         flex-direction: column;
         gap: 0.5rem;
     }
 
+    /* Rotate arrow for vertical transfer flow on mobile */
     .transfer-arrow {
         transform: rotate(90deg);
     }

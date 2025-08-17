@@ -1,138 +1,117 @@
-/**
- * Club Routes
- * 
- * This module handles all club-related API endpoints including:
- * - Club management and information
- * - Player assignments and transfers
- * - Budget management
- * - Club statistics and data
- * 
- * @author Kobe Berckmans
- * @version 1.0.0
- * @license MIT
- */
-
 const express = require('express');
 const router = express.Router();
 const Club = require('../models/Club');
 
-/**
- * GET /api/clubs
- * Retrieves all clubs with their basic information
- * 
- * @route GET /api/clubs
- * @returns {Array} Array of club objects
- * @throws {500} Internal server error
- */
+// GET all clubs
 router.get('/', async (req, res) => {
   try {
-    const clubs = await Club.find({}).sort({ name: 1 });
+    const clubs = await Club.find();
     res.json(clubs);
-  } catch (error) {
-    console.error('Error fetching clubs:', error);
-    res.status(500).json({ message: 'Error fetching clubs' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
-/**
- * GET /api/clubs/:id
- * Retrieves a specific club by ID with detailed information
- * 
- * @route GET /api/clubs/:id
- * @param {string} id - Club ID
- * @returns {Object} Club object with detailed information
- * @throws {404} Club not found
- * @throws {500} Internal server error
- */
+// GET single club
 router.get('/:id', async (req, res) => {
   try {
     const club = await Club.findById(req.params.id);
-    
     if (!club) {
       return res.status(404).json({ message: 'Club not found' });
     }
-    
     res.json(club);
-  } catch (error) {
-    console.error('Error fetching club:', error);
-    res.status(500).json({ message: 'Error fetching club' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
-/**
- * GET /api/clubs/:id/players
- * Retrieves a specific club's players by filtering from the main player collection
- * 
- * @route GET /api/clubs/:id/players
- * @param {string} id - Club ID
- * @returns {Object} Club object with associated players
- * @throws {404} Club not found
- * @throws {500} Internal server error
- */
+// GET club players
 router.get('/:id/players', async (req, res) => {
   try {
     const club = await Club.findById(req.params.id);
-    
     if (!club) {
       return res.status(404).json({ message: 'Club not found' });
     }
 
-    // Fetch players from the main Players collection
-    const { MongoClient } = require('mongodb');
-    const client = new MongoClient(process.env.MONGODB_URI);
-    
+    // Get players from MongoDB
+    const { MongoClient, ServerApiVersion } = require('mongodb');
+    const mongoUri = process.env.MONGODB_URI;
+    const client = new MongoClient(mongoUri, {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+      }
+    });
     await client.connect();
-    const database = client.db();
-    const players = await database.collection('Players')
-      .find({ _id: { $in: club.playerIds.map(id => new require('mongodb').ObjectId(id)) } })
-      .toArray();
-    
+    const db = client.db('Course_Project');
+    const players = await db.collection('Players').find({}).toArray();
     await client.close();
+
+    // Filter players that belong to this club
+    const clubPlayers = players.filter(player => 
+      club.playerIds.includes(player._id.toString())
+    );
 
     res.json({
       club: club,
-      players: players
+      players: clubPlayers,
+      playerCount: clubPlayers.length
     });
-  } catch (error) {
-    console.error('Error fetching club players:', error);
-    res.status(500).json({ message: 'Error fetching club players' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
-/**
- * PUT /api/clubs/:id
- * Updates a club's information
- * 
- * @route PUT /api/clubs/:id
- * @param {string} id - Club ID
- * @param {Object} updateData - Club data to update
- * @returns {Object} Updated club object
- * @throws {404} Club not found
- * @throws {400} Invalid update data
- * @throws {500} Internal server error
- */
+// POST new club
+router.post('/', async (req, res) => {
+  const club = new Club({
+    name: req.body.name,
+    budget: req.body.budget || 100000000,
+    league: req.body.league || 'Premier League',
+    country: req.body.country || 'England'
+  });
+
+  try {
+    const newClub = await club.save();
+    res.status(201).json(newClub);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// PUT update club
 router.put('/:id', async (req, res) => {
   try {
-    const { name, budget, league, country } = req.body;
-    
     const club = await Club.findById(req.params.id);
-    
     if (!club) {
       return res.status(404).json({ message: 'Club not found' });
     }
 
-    // Update club fields if provided
-    if (name !== undefined) club.name = name;
-    if (budget !== undefined) club.budget = budget;
-    if (league !== undefined) club.league = league;
-    if (country !== undefined) club.country = country;
+    if (req.body.name) club.name = req.body.name;
+    if (req.body.budget) club.budget = req.body.budget;
+    if (req.body.league) club.league = req.body.league;
+    if (req.body.country) club.country = req.body.country;
+    if (req.body.playerIds) club.playerIds = req.body.playerIds;
 
     const updatedClub = await club.save();
-    
     res.json(updatedClub);
-  } catch (error) {
-    console.error('Error updating club:', error);
-    res.status(500).json({ message: 'Error updating club' });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// DELETE club
+router.delete('/:id', async (req, res) => {
+  try {
+    const club = await Club.findById(req.params.id);
+    if (!club) {
+      return res.status(404).json({ message: 'Club not found' });
+    }
+    await club.remove();
+    res.json({ message: 'Club deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 

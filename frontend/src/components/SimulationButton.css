@@ -1,3 +1,15 @@
+/**
+ * SimulationButton Component Styles
+ * 
+ * CSS styles for the SimulationButton component that provides
+ * transfer simulation controls and user feedback.
+ * 
+ * @author Kobe Berckmans
+ * @version 1.0.0
+ * @license MIT
+ */
+
+/* Main Container - Primary wrapper for simulation controls */
 .simulation-controls {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 1rem;
@@ -6,18 +18,21 @@
     border: 2px solid rgba(255, 215, 0, 0.3);
 }
 
+/* Component Header - Title styling for simulation section */
 .simulation-controls h3 {
     margin: 0 0 1rem 0;
     color: #ffd700;
     font-size: 1.3rem;
 }
 
+/* Button Container - Layout for simulation action buttons */
 .simulation-buttons {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
 }
 
+/* Base Button Styling - Common styles for all simulation buttons */
 .simulation-btn {
     padding: 0.8rem 1.5rem;
     border: none;
@@ -28,26 +43,31 @@
     font-size: 1rem;
 }
 
+/* Single Transfer Button - Green styling for individual transfer simulation */
 .simulation-btn.single {
     background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
     color: white;
 }
 
+/* Transfer Window Button - Blue styling for multiple transfer simulation */
 .simulation-btn.window {
     background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
     color: white;
 }
 
+/* Button Hover Effects - Enhanced interaction feedback */
 .simulation-btn:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+/* Disabled Button State - Visual feedback when button is inactive */
 .simulation-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
+/* Message Display - Container for success and error messages */
 .simulation-message {
     margin-top: 1rem;
     padding: 0.8rem;
@@ -55,23 +75,29 @@
     font-weight: 500;
 }
 
+/* Success Message - Green styling for successful operations */
 .simulation-message.success {
     background: rgba(76, 175, 80, 0.2);
     border: 1px solid #4CAF50;
     color: #4CAF50;
 }
 
+/* Error Message - Red styling for error states */
 .simulation-message.error {
     background: rgba(244, 67, 54, 0.2);
     border: 1px solid #f44336;
     color: #f44336;
 }
 
+/* Responsive Design - Mobile-first approach for smaller screens */
 @media (max-width: 768px) {
+
+    /* Stack buttons vertically on mobile devices */
     .simulation-buttons {
         flex-direction: column;
     }
 
+    /* Full width buttons on mobile for better touch targets */
     .simulation-btn {
         width: 100%;
     }

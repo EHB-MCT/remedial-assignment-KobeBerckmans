@@ -1,204 +1,191 @@
-/**
- * Authentication Routes
- * 
- * This module handles all authentication-related API endpoints including:
- * - User registration
- * - User login
- * - JWT token validation
- * - Password hashing and verification
- * 
- * @author Kobe Berckmans
- * @version 1.0.0
- * @license MIT
- */
-
 const express = require('express');
-const router = express.Router();
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Club = require('../models/Club');
+const router = express.Router();
 
-/**
- * POST /api/auth/register
- * Registers a new user account
- * 
- * @route POST /api/auth/register
- * @param {string} username - Unique username for the account
- * @param {string} email - User's email address
- * @param {string} password - User's password (will be hashed)
- * @returns {Object} Created user object with JWT token
- * @throws {400} Username or email already exists
- * @throws {400} Invalid input data
- * @throws {500} Internal server error
- */
+// JWT Secret (in production, use environment variable)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// Middleware to verify JWT token
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ message: 'Access token required' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid or expired token' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// Register new user
 router.post('/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, clubName } = req.body;
 
-    // Check if username already exists
-    const existingUsername = await User.findOne({ username });
-    if (existingUsername) {
-      return res.status(400).json({ message: 'Username already exists' });
+    // Check if user already exists
+    const existingUser = await User.findOne({ 
+      $or: [{ username }, { email }] 
+    });
+    
+    if (existingUser) {
+      return res.status(400).json({ 
+        message: 'Username or email already exists' 
+      });
     }
 
-    // Check if email already exists
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail) {
-      return res.status(400).json({ message: 'Email already exists' });
+    // Check if club name already exists
+    const existingClub = await Club.findOne({ name: clubName });
+    if (existingClub) {
+      return res.status(400).json({ 
+        message: 'Club name already exists' 
+      });
     }
 
-    // Hash the password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create new user
-    const user = new User({
-      username,
-      email,
-      password: hashedPassword
+    // Create new club for the user
+    const newClub = new Club({
+      name: clubName,
+      budget: 500000000, // 500M starting budget
+      league: 'User League',
+      country: 'User Country',
+      playerIds: []
     });
 
-    const savedUser = await user.save();
+    const savedClub = await newClub.save();
+
+    // Create new user
+    const newUser = new User({
+      username,
+      email,
+      password,
+      clubName,
+      clubId: savedClub._id
+    });
+
+    const savedUser = await newUser.save();
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: savedUser._id, username: savedUser.username },
-      process.env.JWT_SECRET || 'fallback-secret-key',
+      { 
+        userId: savedUser._id, 
+        username: savedUser.username,
+        clubId: savedClub._id,
+        clubName: savedClub.name
+      }, 
+      JWT_SECRET, 
       { expiresIn: '24h' }
     );
 
     res.status(201).json({
       message: 'User registered successfully',
-      user: {
-        id: savedUser._id,
-        username: savedUser.username,
-        email: savedUser.email
-      },
-      token
+      token,
+      user: savedUser,
+      club: savedClub
     });
+
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ message: 'Error registering user' });
+    res.status(500).json({ 
+      message: 'Error creating user',
+      error: error.message 
+    });
   }
 });
 
-/**
- * POST /api/auth/login
- * Authenticates a user and returns a JWT token
- * 
- * @route POST /api/auth/login
- * @param {string} username - User's username or email
- * @param {string} password - User's password
- * @returns {Object} User object with JWT token
- * @throws {401} Invalid credentials
- * @throws {400} Missing required fields
- * @throws {500} Internal server error
- */
+// Login user
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ message: 'Username and password are required' });
-    }
-
-    // Find user by username or email
-    const user = await User.findOne({
-      $or: [
-        { username: username },
-        { email: username }
-      ]
-    });
-
+    // Find user by username
+    const user = await User.findOne({ username }).populate('clubId');
+    
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ 
+        message: 'Invalid username or password' 
+      });
     }
 
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+    // Check password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ 
+        message: 'Invalid username or password' 
+      });
+    }
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Check if user has a club
+    if (!user.clubId) {
+      console.error('User has no club:', user.username);
+      return res.status(500).json({ 
+        message: 'User account is missing club data. Please contact support.' 
+      });
     }
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user._id, username: user.username },
-      process.env.JWT_SECRET || 'fallback-secret-key',
+      { 
+        userId: user._id, 
+        username: user.username,
+        clubId: user.clubId._id,
+        clubName: user.clubId.name
+      }, 
+      JWT_SECRET, 
       { expiresIn: '24h' }
     );
 
     res.json({
       message: 'Login successful',
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email
-      },
-      token
+      token,
+      user: user.toJSON(),
+      club: user.clubId
     });
+
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Error during login' });
+    res.status(500).json({ 
+      message: 'Error during login',
+      error: error.message 
+    });
   }
 });
 
-/**
- * POST /api/auth/verify
- * Verifies a JWT token and returns user information
- * 
- * @route POST /api/auth/verify
- * @param {string} token - JWT token to verify
- * @returns {Object} User information if token is valid
- * @throws {401} Invalid or expired token
- * @throws {500} Internal server error
- */
-router.post('/verify', async (req, res) => {
+// Get current user profile
+router.get('/profile', authenticateToken, async (req, res) => {
   try {
-    const { token } = req.body;
-
-    if (!token) {
-      return res.status(401).json({ message: 'Token is required' });
-    }
-
-    // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
-    
-    // Find user by ID
-    const user = await User.findById(decoded.userId).select('-password');
+    const user = await User.findById(req.user.userId).populate('clubId');
     
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     res.json({
-      message: 'Token is valid',
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email
-      }
+      user: user.toJSON(),
+      club: user.clubId
     });
+
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ message: 'Token has expired' });
-    }
-    
-    console.error('Token verification error:', error);
-    res.status(500).json({ message: 'Error verifying token' });
+    console.error('Profile error:', error);
+    res.status(500).json({ 
+      message: 'Error fetching profile',
+      error: error.message 
+    });
   }
 });
 
-/**
- * POST /api/auth/logout
- * Logs out a user (client-side token removal)
- * 
- * @route POST /api/auth/logout
- * @returns {Object} Success message
- */
-router.post('/logout', (req, res) => {
+// Logout (client-side token removal)
+router.post('/logout', authenticateToken, (req, res) => {
   res.json({ message: 'Logout successful' });
 });
 

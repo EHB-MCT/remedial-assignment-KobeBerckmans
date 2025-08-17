@@ -1,3 +1,15 @@
+/**
+ * PlayerList Component Styles
+ * 
+ * CSS styles for the PlayerList component that displays football players
+ * in various layouts including grid, compact, and limited display modes.
+ * 
+ * @author Kobe Berckmans
+ * @version 1.0.0
+ * @license MIT
+ */
+
+/* Grid Layout - Displays players in a 3-column grid */
 .player-list.grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -6,6 +18,7 @@
     margin-top: 1rem;
 }
 
+/* Compact Layout - Displays players in a 2-column grid with reduced spacing */
 .player-list.compact {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -14,6 +27,7 @@
     margin-top: 1rem;
 }
 
+/* Base Player Card - Default styling for individual player cards */
 .player-card {
     background: linear-gradient(120deg, #3a7bd5 0%, #00d2ff 100%);
     border-radius: 1.2rem;
@@ -27,6 +41,7 @@
     border: 3px solid #ffd700;
 }
 
+/* Compact Player Card - Reduced size and vertical layout */
 .player-card.compact {
     width: 200px;
     padding: 1rem 0.7rem;
@@ -36,6 +51,7 @@
     border: 2px solid #fff;
 }
 
+/* Compact Short Player Card - Minimal size for limited space */
 .player-card.compact-short {
     width: 160px;
     padding: 0.7rem 0.5rem;
@@ -46,12 +62,14 @@
     min-height: 120px;
 }
 
+/* Hover Effects - Enhanced visual feedback on card interaction */
 .player-card:hover {
     transform: translateY(-6px) scale(1.03);
     box-shadow: 0 8px 24px rgba(30, 60, 114, 0.25);
     border-color: #fff700;
 }
 
+/* Player Avatar - Circular icon container for player representation */
 .player-avatar {
     font-size: 2.5rem;
     margin-right: 1.2rem;
@@ -65,24 +83,28 @@
     box-shadow: 0 2px 8px rgba(30, 60, 114, 0.10);
 }
 
+/* Compact Avatar Adjustments - Reduced margins for compact layouts */
 .player-card.compact .player-avatar,
 .player-card.compact-short .player-avatar {
     margin-right: 0;
     margin-bottom: 0.5rem;
 }
 
+/* Player Name - Styling for player name headings */
 .player-info h3 {
     margin: 0 0 0.3rem 0;
     font-size: 1.1rem;
     color: #ffd700;
 }
 
+/* Player Details - Styling for player information text */
 .player-info p {
     margin: 0.1rem 0;
     font-size: 0.95rem;
     color: #fff;
 }
 
+/* Player Statistics Container - Background container for player stats */
 .player-stats {
     margin-top: 0.5rem;
     display: flex;
@@ -95,24 +117,28 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* Individual Stat Item - Layout for each statistic row */
 .stat-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
+/* Statistic Label - Styling for statistic names */
 .stat-label {
     color: #ffd700;
     font-weight: bold;
     font-size: 0.85rem;
 }
 
+/* Statistic Value - Styling for statistic numbers */
 .stat-value {
     color: #fff;
     font-weight: bold;
     font-size: 0.9rem;
 }
 
+/* Loading State - Styling for loading indicator */
 .player-list-loading {
     text-align: center;
     font-size: 1.2rem;

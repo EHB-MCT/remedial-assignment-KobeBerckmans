@@ -1,12 +1,36 @@
+/**
+ * DailySimulation Component
+ * 
+ * Provides functionality to simulate a full day of transfer market activity.
+ * Triggers backend simulation and displays results including transfers, auctions, and club updates.
+ * 
+ * @author Kobe Berckmans
+ * @version 1.0.0
+ * @license MIT
+ */
+
 import React, { useState } from 'react';
 import axios from 'axios';
 import './DailySimulation.css';
 
+/**
+ * DailySimulation Component
+ * 
+ * Renders a simulation interface that allows users to trigger daily transfer market
+ * simulations and view detailed results of the simulation.
+ * 
+ * @returns {JSX.Element} DailySimulation component
+ */
 function DailySimulation() {
+  // State for managing simulation process and results
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [message, setMessage] = useState('');
 
+  /**
+   * Triggers the daily simulation on the backend
+   * Sends POST request to simulation endpoint and handles response
+   */
   const simulateDay = async () => {
     setIsLoading(true);
     setMessage('');
@@ -15,14 +39,20 @@ function DailySimulation() {
     try {
       const response = await axios.post('http://localhost:3000/api/simulation/day');
       setResults(response.data.results);
-      setMessage('✅ Daily simulation completed successfully!');
+      setMessage('Daily simulation completed successfully!');
     } catch (error) {
-      setMessage(`❌ ${error.response?.data?.message || 'Simulation failed'}`);
+      setMessage(`${error.response?.data?.message || 'Simulation failed'}`);
     } finally {
       setIsLoading(false);
     }
   };
 
+  /**
+   * Formats currency amounts in EUR format
+   * 
+   * @param {number} amount - Amount to format
+   * @returns {string} Formatted currency string
+   */
   const formatAmount = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -34,11 +64,13 @@ function DailySimulation() {
 
   return (
     <div className="daily-simulation">
+      {/* Simulation header with description */}
       <div className="simulation-header">
         <h3>Daily Transfer Market Simulation</h3>
         <p>Simulate a full day of transfer market activity</p>
       </div>
 
+      {/* Simulation control button */}
       <div className="simulation-controls">
         <button 
           onClick={simulateDay}
@@ -49,14 +81,17 @@ function DailySimulation() {
         </button>
       </div>
 
+      {/* Success/error message display */}
       {message && (
-        <div className={`simulation-message ${message.includes('✅') ? 'success' : 'error'}`}>
+        <div className={`simulation-message ${message.includes('successfully') ? 'success' : 'error'}`}>
           {message}
         </div>
       )}
 
+      {/* Simulation results display */}
       {results && (
         <div className="simulation-results">
+          {/* Completed transfers section */}
           <div className="results-section">
             <h4>Completed Transfers ({results.completedTransfers.length})</h4>
             {results.completedTransfers.length > 0 ? (
@@ -78,6 +113,7 @@ function DailySimulation() {
             )}
           </div>
 
+          {/* New auctions section */}
           <div className="results-section">
             <h4>New Auctions ({results.newAuctions.length})</h4>
             {results.newAuctions.length > 0 ? (
@@ -98,6 +134,7 @@ function DailySimulation() {
             )}
           </div>
 
+          {/* Updated clubs section */}
           <div className="results-section">
             <h4>Updated Clubs ({results.updatedClubs.length})</h4>
             {results.updatedClubs.length > 0 ? (

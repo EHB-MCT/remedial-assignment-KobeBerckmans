@@ -182,7 +182,7 @@ async function triggerAIBidding() {
         await new Promise(resolve => setTimeout(resolve, 200));
         
       } catch (error) {
-        console.error(`❌ Error processing auction ${auction.playerName}:`, error.message);
+        console.error(`Error processing auction ${auction.playerName}:`, error.message);
         // Continue with next auction
       }
     }
@@ -190,7 +190,7 @@ async function triggerAIBidding() {
     console.log('✅ AI bidding completed');
     
   } catch (error) {
-    console.error('❌ AI bidding error:', error);
+    console.error('AI bidding error:', error);
     throw error; // Re-throw to be caught by the caller
   }
 }
